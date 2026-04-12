@@ -601,7 +601,7 @@ for(var j=0;j<r.data.length;j++){var row=r.data[j];tb+='<tr data-ico="'+row.ico+
 return renderAggCharts(r.data)+'<div class="rg-toolbar"><span>'+r.total+' v\u00fdsledkov</span><button class="rg-btn rg-btn-ghost rg-btn-sm" data-action="export">\u2b07 Export CSV</button></div><div class="rg-table-wrap"><table class="rg-table"><thead><tr>'+th+'</tr></thead><tbody>'+tb+"</tbody></table></div>"+renderPagination()}
 
 function renderAggCharts(data){
-if(!data||data.length<3)return"";
+if(!data||data.length<1)return"";
 var W=320,H=160,pad=40,padR=15,padT=20,padB=25;
 var cW=W-pad-padR,cH=H-padT-padB;
 var ac="#c8ff3e",red="#f87171",grn="#34d399",dim="#55585f",surf="#111316";
@@ -611,7 +611,7 @@ function mkSVG(title,body){return'<div style="background:'+surf+';border:1px sol
 // ─── 1: Revenue distribution histogram ───
 var trzby=[];for(var i=0;i<data.length;i++){var t=data[i].trzby_celkom;if(t!=null&&t>0)trzby.push(t)}
 var c1="";
-if(trzby.length>2){
+if(trzby.length>0){
 trzby.sort(function(a,b){return a-b});
 var mx=trzby[trzby.length-1];
 var buckets,labels;
@@ -623,13 +623,13 @@ for(i=0;i<trzby.length;i++){for(var b=buckets.length-2;b>=0;b--){if(trzby[i]>=bu
 var maxC=Math.max.apply(null,counts);if(maxC===0)maxC=1;
 var nb=counts.length,bw=Math.max((cW/nb)-6,12);
 for(i=0;i<nb;i++){var barH=counts[i]/maxC*cH;var x=pad+i*(cW/nb)+3;var y=padT+cH-barH;
-c1+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.3"/>';
+c1+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.3" style="cursor:crosshair"><title>'+labels[i]+': '+counts[i]+' firiem</title></rect>';
 if(counts[i]>0)c1+='<text x="'+(x+bw/2)+'" y="'+(y-4)+'" text-anchor="middle" fill="'+ac+'" font-family="monospace" font-size="9" font-weight="600">'+counts[i]+"</text>";
 c1+='<text x="'+(x+bw/2)+'" y="'+(H-3)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="7">'+labels[i]+"</text>"}}
 
 // ─── 2: Profitable vs Loss-making donut ───
 var profit=0,loss=0;
-for(i=0;i<data.length;i++){if(data[i].vh_po_zdaneni!=null){if(data[i].vh_po_zdaneni>0)profit++;else loss++}}
+for(i=0;i<data.length;i++){if(data[i].vh_po_zdaneni!=null){if(data[i].vh_po_zdaneni>=0)profit++;else loss++}}
 var total=profit+loss;var c2="";
 if(total>0){
 var cx=W/2,cy=H/2+5,r=45;
@@ -695,19 +695,20 @@ function fmtAx(v){if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+"M";if(Math.abs(v
 
 // ─── CHART 1: Revenue & Profit ───
 var trzby=[],zisk=[];
-for(var i=0;i<n;i++){trzby.push(fin[i].trzby_celkom||0);zisk.push(fin[i].vh_po_zdaneni||0)}
-var allVals=trzby.concat(zisk);
+for(var i=0;i<n;i++){trzby.push(fin[i].trzby_celkom!=null?fin[i].trzby_celkom:0);zisk.push(fin[i].vh_po_zdaneni!=null?fin[i].vh_po_zdaneni:null)}
+var allVals=[];for(i=0;i<n;i++){allVals.push(trzby[i]);if(zisk[i]!=null)allVals.push(zisk[i])}
+if(allVals.length===0)allVals=[0,1];
 var a1=axis(allVals,4);
 var c1="";
 // Grid lines
 for(i=0;i<a1.ticks.length;i++){var yy=yPos(a1.ticks[i],a1);c1+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>';c1+='<text x="'+(pad-4)+'" y="'+(yy+3)+'" text-anchor="end" fill="'+dim+'" font-family="monospace" font-size="8">'+fmtAx(a1.ticks[i])+"</text>"}
 // Bars (tržby)
 var bw=bW();
-for(i=0;i<n;i++){var y0=yPos(0,a1),yt=yPos(trzby[i],a1);var barH=Math.abs(y0-yt);var barY=Math.min(y0,yt);c1+='<rect x="'+xBar(i)+'" y="'+barY+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.25"/>';c1+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
+for(i=0;i<n;i++){var y0=yPos(0,a1),yt=yPos(trzby[i],a1);var barH=Math.abs(y0-yt);var barY=Math.min(y0,yt);c1+='<rect x="'+xBar(i)+'" y="'+barY+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.25" style="cursor:crosshair"><title>'+fin[i].rok+' Tr\u017eby: '+fmtEur(trzby[i])+'</title></rect>';c1+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
 // Line (zisk)
-var pts="";for(i=0;i<n;i++){var lx=xBar(i)+bw/2,ly=yPos(zisk[i],a1);pts+=(i===0?"M":"L")+lx+","+ly}
-c1+='<path d="'+pts+'" fill="none" stroke="'+grn+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-for(i=0;i<n;i++){var cx=xBar(i)+bw/2,cy=yPos(zisk[i],a1),col=zisk[i]>=0?grn:red;c1+='<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="'+col+'"/>'}
+var pts="";var zS=false;for(i=0;i<n;i++){if(zisk[i]!=null){var lx=xBar(i)+bw/2,ly=yPos(zisk[i],a1);pts+=(zS?"L":"M")+lx+","+ly;zS=true}}
+if(zS)c1+='<path d="'+pts+'" fill="none" stroke="'+grn+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+for(i=0;i<n;i++){if(zisk[i]!=null){var cx=xBar(i)+bw/2,cy=yPos(zisk[i],a1),col=zisk[i]>=0?grn:red;c1+='<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="'+col+'" opacity="0.01" style="cursor:crosshair"><title>'+fin[i].rok+' Zisk: '+fmtEur(zisk[i])+'</title></circle><circle cx="'+cx+'" cy="'+cy+'" r="3" fill="'+col+'" pointer-events="none"/>'}}
 // Legend
 c1+='<rect x="'+pad+'" y="4" width="8" height="8" rx="1" fill="'+ac+'" opacity="0.3"/><text x="'+(pad+12)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Tr\u017eby</text>';
 c1+='<line x1="'+(pad+55)+'" y1="8" x2="'+(pad+67)+'" y2="8" stroke="'+grn+'" stroke-width="2"/><text x="'+(pad+71)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Zisk</text>';
@@ -728,21 +729,24 @@ if(started)c2+='<path d="'+pts+'" fill="none" stroke="'+ac+'" stroke-width="2" o
 // Net margin line
 pts="";started=false;for(i=0;i<n;i++){if(mCista[i]!=null){lx=xBar(i)+bw/2;ly=yPos(mCista[i],a2);pts+=(started?"L":"M")+lx+","+ly;started=true}}
 if(started)c2+='<path d="'+pts+'" fill="none" stroke="'+grn+'" stroke-width="2" stroke-linecap="round"/>';
-for(i=0;i<n;i++){if(mCista[i]!=null)c2+='<circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mCista[i],a2)+'" r="3" fill="'+grn+'"/>';c2+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
+for(i=0;i<n;i++){if(mCista[i]!=null)c2+='<circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mCista[i],a2)+'" r="5" fill="'+grn+'" opacity="0.01" style="cursor:crosshair"><title>'+fin[i].rok+' \u010cist\u00e1 mar\u017ea: '+mCista[i].toFixed(1)+'%</title></circle><circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mCista[i],a2)+'" r="3" fill="'+grn+'" pointer-events="none"/>';if(mEbitda[i]!=null)c2+='<circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mEbitda[i],a2)+'" r="5" fill="'+ac+'" opacity="0.01" style="cursor:crosshair"><title>'+fin[i].rok+' EBITDA mar\u017ea: '+mEbitda[i].toFixed(1)+'%</title></circle>';c2+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
 c2+='<line x1="'+pad+'" y1="6" x2="'+(pad+12)+'" y2="6" stroke="'+grn+'" stroke-width="2"/><text x="'+(pad+16)+'" y="9" fill="'+dim+'" font-family="monospace" font-size="8">\u010cist\u00e1</text>';
 c2+='<line x1="'+(pad+55)+'" y1="6" x2="'+(pad+67)+'" y2="6" stroke="'+ac+'" stroke-width="2" opacity="0.5"/><text x="'+(pad+71)+'" y="9" fill="'+dim+'" font-family="monospace" font-size="8">EBITDA</text>'}
 
 // ─── CHART 3: Debt vs Equity ───
 var eq=[],zav=[],uv=[];
-for(i=0;i<n;i++){eq.push(Math.max(fin[i].vlastne_imanie||0,0));zav.push(fin[i].zavazky_celkom||0);uv.push(fin[i].bankove_uvery||0)}
-var maxStack=0;for(i=0;i<n;i++){var s=eq[i]+zav[i];if(s>maxStack)maxStack=s}
+for(i=0;i<n;i++){eq.push(fin[i].vlastne_imanie||0);zav.push(fin[i].zavazky_celkom||0);uv.push(fin[i].bankove_uvery||0)}
+var maxStack=0;var minVal=0;for(i=0;i<n;i++){var s=Math.max(eq[i],0)+zav[i];if(s>maxStack)maxStack=s;if(eq[i]<minVal)minVal=eq[i]}
 var c3="";
-if(maxStack>0){
-var a3={min:0,max:maxStack,ticks:[0,maxStack/3,maxStack*2/3,maxStack]};
+if(maxStack>0||minVal<0){
+var a3={min:minVal,max:maxStack};a3.ticks=[a3.min,(a3.min+a3.max)/2,a3.max];
 for(i=0;i<a3.ticks.length;i++){yy=yPos(a3.ticks[i],a3);c3+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>';c3+='<text x="'+(pad-4)+'" y="'+(yy+3)+'" text-anchor="end" fill="'+dim+'" font-family="monospace" font-size="8">'+fmtAx(a3.ticks[i])+"</text>"}
-for(i=0;i<n;i++){var baseY=yPos(0,a3);var eqH=eq[i]/maxStack*cH;var zvH=zav[i]/maxStack*cH;
-c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH-zvH)+'" width="'+bw+'" height="'+zvH+'" rx="2" fill="'+red+'" opacity="0.35"/>';
-c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH)+'" width="'+bw+'" height="'+eqH+'" rx="2" fill="'+ac+'" opacity="0.35"/>';
+var range=a3.max-a3.min;if(range===0)range=1;
+for(i=0;i<n;i++){var baseY=yPos(0,a3);var eqAbs=Math.abs(eq[i]);var eqH=eqAbs/range*cH;var zvH=zav[i]/range*cH;
+if(eq[i]>=0){c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH-zvH)+'" width="'+bw+'" height="'+zvH+'" rx="2" fill="'+red+'" opacity="0.35" style="cursor:crosshair"><title>'+fin[i].rok+' Z\u00e1v\u00e4zky: '+fmtEur(zav[i])+'</title></rect>';
+c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH)+'" width="'+bw+'" height="'+eqH+'" rx="2" fill="'+ac+'" opacity="0.35" style="cursor:crosshair"><title>'+fin[i].rok+' Vl. imanie: '+fmtEur(eq[i])+'</title></rect>'}
+else{c3+='<rect x="'+xBar(i)+'" y="'+(baseY-zvH)+'" width="'+bw+'" height="'+zvH+'" rx="2" fill="'+red+'" opacity="0.35" style="cursor:crosshair"><title>'+fin[i].rok+' Z\u00e1v\u00e4zky: '+fmtEur(zav[i])+'</title></rect>';
+c3+='<rect x="'+xBar(i)+'" y="'+baseY+'" width="'+bw+'" height="'+eqH+'" rx="2" fill="#ff5c46" opacity="0.5" style="cursor:crosshair"><title>'+fin[i].rok+' Z\u00c1PORN\u00c9 imanie: '+fmtEur(eq[i])+'</title></rect>'}
 c3+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
 c3+='<rect x="'+pad+'" y="4" width="8" height="8" rx="1" fill="'+ac+'" opacity="0.35"/><text x="'+(pad+12)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Imanie</text>';
 c3+='<rect x="'+(pad+55)+'" y="4" width="8" height="8" rx="1" fill="'+red+'" opacity="0.35"/><text x="'+(pad+67)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Z\u00e1v\u00e4zky</text>'}
