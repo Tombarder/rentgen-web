@@ -577,6 +577,10 @@ var STYLES='\
 .rg-pagination{display:flex;justify-content:center;gap:.4rem;margin-top:1.2rem}\
 @keyframes rg-spin{to{transform:rotate(360deg)}}\
 @media(max-width:768px){.rg{padding:1rem 16px}.rg-filters{grid-template-columns:1fr 1fr}.rg-kpi-grid{grid-template-columns:1fr 1fr}.rg-header{flex-direction:column;gap:.8rem}}\
+.rg-tip{position:fixed;pointer-events:none;background:rgba(12,13,16,.95);border:1px solid rgba(200,255,62,.25);border-radius:6px;padding:5px 10px;font-family:var(--rg-mono);font-size:11px;color:#eeeee9;white-space:nowrap;z-index:9999;opacity:0;transition:opacity .12s;box-shadow:0 4px 16px rgba(0,0,0,.5)}\
+.rg-tip.on{opacity:1}\
+.rg-tip .rg-tip-label{color:#94979f;font-size:9px;margin-bottom:2px}\
+.rg-tip .rg-tip-val{font-weight:600;font-size:12px}\
 ';
 
 function fmt(v){if(v==null||v==="")return"\u2014";var n=Number(v);if(isNaN(n))return v;return n.toLocaleString("sk-SK",{maximumFractionDigits:0})}
@@ -585,7 +589,21 @@ function fmtEur(v){if(v==null)return"\u2014";var n=Number(v);if(Math.abs(n)>=1e6
 function valClass(v){if(v==null)return"";return Number(v)>=0?"rg-positive":"rg-negative"}
 function apiFetch(ep,params){var url=new URL(API_URL+ep);Object.entries(params||{}).forEach(function(kv){if(kv[1]!==""&&kv[1]!=null&&kv[1]!==undefined&&kv[1]!==false)url.searchParams.set(kv[0],kv[1])});return fetch(url.toString()).then(function(r){if(!r.ok)throw new Error("API error: "+r.status);return r.json()})}
 
-function render(){if(!container)return;container.innerHTML='<div class="rg">'+renderHeader()+(state.view==="detail"?renderDetail():renderList())+"</div>";bindEvents();var intro=document.getElementById("scr-intro");if(intro)intro.style.display=state.view==="detail"?"none":"block"}
+function render(){if(!container)return;container.innerHTML='<div class="rg">'+renderHeader()+(state.view==="detail"?renderDetail():renderList())+"</div>";bindEvents();bindTooltips();var intro=document.getElementById("scr-intro");if(intro)intro.style.display=state.view==="detail"?"none":"block"}
+
+function bindTooltips(){
+var tip=document.getElementById("rg-tooltip");
+if(!tip){tip=document.createElement("div");tip.id="rg-tooltip";tip.className="rg-tip";document.body.appendChild(tip)}
+var els=container.querySelectorAll("[data-tip]");
+els.forEach(function(el){
+el.style.cursor="crosshair";
+el.addEventListener("mouseenter",function(e){
+var parts=el.getAttribute("data-tip").split(/ (.+)/);
+tip.innerHTML=(parts.length>1?'<div class="rg-tip-label">'+parts[0]+'</div><div class="rg-tip-val">'+parts[1]+"</div>":'<div class="rg-tip-val">'+parts[0]+"</div>");
+tip.classList.add("on")});
+el.addEventListener("mousemove",function(e){
+tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY-10)+"px"});
+el.addEventListener("mouseleave",function(){tip.classList.remove("on")})})}
 
 function renderHeader(){var s=state.stats;return'<div class="rg-header"><div class="rg-logo">RENTGEN <span>investment screener</span></div>'+(s?'<div class="rg-stats-bar"><span>Firiem: <strong>'+fmt(s.firmy)+'</strong></span><span>Z\u00e1znamov: <strong>'+fmt(s.financials)+'</strong></span><span>Roky: <strong>'+(s.roky?s.roky.join(", "):"")+'</strong></span></div>':"")+"</div>"}
 
@@ -623,7 +641,7 @@ for(i=0;i<trzby.length;i++){for(var b=buckets.length-2;b>=0;b--){if(trzby[i]>=bu
 var maxC=Math.max.apply(null,counts);if(maxC===0)maxC=1;
 var nb=counts.length,bw=Math.max((cW/nb)-6,12);
 for(i=0;i<nb;i++){var barH=counts[i]/maxC*cH;var x=pad+i*(cW/nb)+3;var y=padT+cH-barH;
-c1+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.3" style="cursor:crosshair"><title>'+labels[i]+': '+counts[i]+' firiem</title></rect>';
+c1+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.3" data-tip="'+labels[i]+': '+counts[i]+' firiem"></rect>';
 if(counts[i]>0)c1+='<text x="'+(x+bw/2)+'" y="'+(y-4)+'" text-anchor="middle" fill="'+ac+'" font-family="monospace" font-size="9" font-weight="600">'+counts[i]+"</text>";
 c1+='<text x="'+(x+bw/2)+'" y="'+(H-3)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="7">'+labels[i]+"</text>"}}
 
@@ -704,11 +722,11 @@ var c1="";
 for(i=0;i<a1.ticks.length;i++){var yy=yPos(a1.ticks[i],a1);c1+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>';c1+='<text x="'+(pad-4)+'" y="'+(yy+3)+'" text-anchor="end" fill="'+dim+'" font-family="monospace" font-size="8">'+fmtAx(a1.ticks[i])+"</text>"}
 // Bars (tržby)
 var bw=bW();
-for(i=0;i<n;i++){var y0=yPos(0,a1),yt=yPos(trzby[i],a1);var barH=Math.abs(y0-yt);var barY=Math.min(y0,yt);c1+='<rect x="'+xBar(i)+'" y="'+barY+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.25" style="cursor:crosshair"><title>'+fin[i].rok+' Tr\u017eby: '+fmtEur(trzby[i])+'</title></rect>';c1+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
+for(i=0;i<n;i++){var y0=yPos(0,a1),yt=yPos(trzby[i],a1);var barH=Math.abs(y0-yt);var barY=Math.min(y0,yt);c1+='<rect x="'+xBar(i)+'" y="'+barY+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.25" data-tip="'+fin[i].rok+' Tr\u017eby: '+fmtEur(trzby[i])+'"></rect>';c1+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
 // Line (zisk)
 var pts="";var zS=false;for(i=0;i<n;i++){if(zisk[i]!=null){var lx=xBar(i)+bw/2,ly=yPos(zisk[i],a1);pts+=(zS?"L":"M")+lx+","+ly;zS=true}}
 if(zS)c1+='<path d="'+pts+'" fill="none" stroke="'+grn+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-for(i=0;i<n;i++){if(zisk[i]!=null){var cx=xBar(i)+bw/2,cy=yPos(zisk[i],a1),col=zisk[i]>=0?grn:red;c1+='<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="'+col+'" opacity="0.01" style="cursor:crosshair"><title>'+fin[i].rok+' Zisk: '+fmtEur(zisk[i])+'</title></circle><circle cx="'+cx+'" cy="'+cy+'" r="3" fill="'+col+'" pointer-events="none"/>'}}
+for(i=0;i<n;i++){if(zisk[i]!=null){var cx=xBar(i)+bw/2,cy=yPos(zisk[i],a1),col=zisk[i]>=0?grn:red;c1+='<circle cx="'+cx+'" cy="'+cy+'" r="14" fill="'+col+'" opacity="0" data-tip="'+fin[i].rok+' Zisk: '+fmtEur(zisk[i])+'"></circle><circle cx="'+cx+'" cy="'+cy+'" r="3" fill="'+col+'" pointer-events="none"/>'}}
 // Legend
 c1+='<rect x="'+pad+'" y="4" width="8" height="8" rx="1" fill="'+ac+'" opacity="0.3"/><text x="'+(pad+12)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Tr\u017eby</text>';
 c1+='<line x1="'+(pad+55)+'" y1="8" x2="'+(pad+67)+'" y2="8" stroke="'+grn+'" stroke-width="2"/><text x="'+(pad+71)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Zisk</text>';
@@ -729,7 +747,7 @@ if(started)c2+='<path d="'+pts+'" fill="none" stroke="'+ac+'" stroke-width="2" o
 // Net margin line
 pts="";started=false;for(i=0;i<n;i++){if(mCista[i]!=null){lx=xBar(i)+bw/2;ly=yPos(mCista[i],a2);pts+=(started?"L":"M")+lx+","+ly;started=true}}
 if(started)c2+='<path d="'+pts+'" fill="none" stroke="'+grn+'" stroke-width="2" stroke-linecap="round"/>';
-for(i=0;i<n;i++){if(mCista[i]!=null)c2+='<circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mCista[i],a2)+'" r="5" fill="'+grn+'" opacity="0.01" style="cursor:crosshair"><title>'+fin[i].rok+' \u010cist\u00e1 mar\u017ea: '+mCista[i].toFixed(1)+'%</title></circle><circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mCista[i],a2)+'" r="3" fill="'+grn+'" pointer-events="none"/>';if(mEbitda[i]!=null)c2+='<circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mEbitda[i],a2)+'" r="5" fill="'+ac+'" opacity="0.01" style="cursor:crosshair"><title>'+fin[i].rok+' EBITDA mar\u017ea: '+mEbitda[i].toFixed(1)+'%</title></circle>';c2+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
+for(i=0;i<n;i++){if(mCista[i]!=null)c2+='<circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mCista[i],a2)+'" r="14" fill="'+grn+'" opacity="0" data-tip="'+fin[i].rok+' \u010cist\u00e1 mar\u017ea: '+mCista[i].toFixed(1)+'%"></circle><circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mCista[i],a2)+'" r="3" fill="'+grn+'" pointer-events="none"/>';if(mEbitda[i]!=null)c2+='<circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mEbitda[i],a2)+'" r="14" fill="'+ac+'" opacity="0" data-tip="'+fin[i].rok+' EBITDA mar\u017ea: '+mEbitda[i].toFixed(1)+'%"></circle>';c2+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
 c2+='<line x1="'+pad+'" y1="6" x2="'+(pad+12)+'" y2="6" stroke="'+grn+'" stroke-width="2"/><text x="'+(pad+16)+'" y="9" fill="'+dim+'" font-family="monospace" font-size="8">\u010cist\u00e1</text>';
 c2+='<line x1="'+(pad+55)+'" y1="6" x2="'+(pad+67)+'" y2="6" stroke="'+ac+'" stroke-width="2" opacity="0.5"/><text x="'+(pad+71)+'" y="9" fill="'+dim+'" font-family="monospace" font-size="8">EBITDA</text>'}
 
@@ -743,10 +761,10 @@ var a3={min:minVal,max:maxStack};a3.ticks=[a3.min,(a3.min+a3.max)/2,a3.max];
 for(i=0;i<a3.ticks.length;i++){yy=yPos(a3.ticks[i],a3);c3+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>';c3+='<text x="'+(pad-4)+'" y="'+(yy+3)+'" text-anchor="end" fill="'+dim+'" font-family="monospace" font-size="8">'+fmtAx(a3.ticks[i])+"</text>"}
 var range=a3.max-a3.min;if(range===0)range=1;
 for(i=0;i<n;i++){var baseY=yPos(0,a3);var eqAbs=Math.abs(eq[i]);var eqH=eqAbs/range*cH;var zvH=zav[i]/range*cH;
-if(eq[i]>=0){c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH-zvH)+'" width="'+bw+'" height="'+zvH+'" rx="2" fill="'+red+'" opacity="0.35" style="cursor:crosshair"><title>'+fin[i].rok+' Z\u00e1v\u00e4zky: '+fmtEur(zav[i])+'</title></rect>';
-c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH)+'" width="'+bw+'" height="'+eqH+'" rx="2" fill="'+ac+'" opacity="0.35" style="cursor:crosshair"><title>'+fin[i].rok+' Vl. imanie: '+fmtEur(eq[i])+'</title></rect>'}
-else{c3+='<rect x="'+xBar(i)+'" y="'+(baseY-zvH)+'" width="'+bw+'" height="'+zvH+'" rx="2" fill="'+red+'" opacity="0.35" style="cursor:crosshair"><title>'+fin[i].rok+' Z\u00e1v\u00e4zky: '+fmtEur(zav[i])+'</title></rect>';
-c3+='<rect x="'+xBar(i)+'" y="'+baseY+'" width="'+bw+'" height="'+eqH+'" rx="2" fill="#ff5c46" opacity="0.5" style="cursor:crosshair"><title>'+fin[i].rok+' Z\u00c1PORN\u00c9 imanie: '+fmtEur(eq[i])+'</title></rect>'}
+if(eq[i]>=0){c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH-zvH)+'" width="'+bw+'" height="'+zvH+'" rx="2" fill="'+red+'" opacity="0.35" data-tip="'+fin[i].rok+' Z\u00e1v\u00e4zky: '+fmtEur(zav[i])+'"></rect>';
+c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH)+'" width="'+bw+'" height="'+eqH+'" rx="2" fill="'+ac+'" opacity="0.35" data-tip="'+fin[i].rok+' Vl. imanie: '+fmtEur(eq[i])+'"></rect>'}
+else{c3+='<rect x="'+xBar(i)+'" y="'+(baseY-zvH)+'" width="'+bw+'" height="'+zvH+'" rx="2" fill="'+red+'" opacity="0.35" data-tip="'+fin[i].rok+' Z\u00e1v\u00e4zky: '+fmtEur(zav[i])+'"></rect>';
+c3+='<rect x="'+xBar(i)+'" y="'+baseY+'" width="'+bw+'" height="'+eqH+'" rx="2" fill="#ff5c46" opacity="0.5" data-tip="'+fin[i].rok+' Z\u00c1PORN\u00c9 imanie: '+fmtEur(eq[i])+'"></rect>'}
 c3+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
 c3+='<rect x="'+pad+'" y="4" width="8" height="8" rx="1" fill="'+ac+'" opacity="0.35"/><text x="'+(pad+12)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Imanie</text>';
 c3+='<rect x="'+(pad+55)+'" y="4" width="8" height="8" rx="1" fill="'+red+'" opacity="0.35"/><text x="'+(pad+67)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Z\u00e1v\u00e4zky</text>'}
