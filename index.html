@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Rentgen — Investičný screening pre slovenské firmy. Finančné dáta 100 000+ firiem, filtre, export, 5-ročná história.">
+<meta name="theme-color" content="#c8ff3e">
+<meta property="og:title" content="Rentgen — Presvieť si firmu">
+<meta property="og:description" content="Nájdi akvizičný cieľ za sekundy. Finančné dáta 100 000+ slovenských firiem.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23c8ff3e'/><circle cx='16' cy='16' r='8' fill='none' stroke='%23060708' stroke-width='3'/><line x1='16' y1='8' x2='16' y2='24' stroke='%23060708' stroke-width='3'/></svg>">
+<title>Rentgen — Presvieť si firmu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,600;12..96,800&family=Geist+Mono:wght@300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060708;--s1:#0c0d10;--s2:#111316;--s3:#181b1f;--s4:#1f2328;
+  --tx:#eeeee9;--t2:#94979f;--t3:#55585f;--t4:#33363c;
+  --ac:#c8ff3e;--acd:rgba(200,255,62,.07);--acg:rgba(200,255,62,.025);
+  --w:#ffffff;--coral:#ff5c46;--blue:#5b8aff;
+  --sans:'Bricolage Grotesque',sans-serif;
+  --serif:'Newsreader',serif;
+  --mono:'Geist Mono',monospace;
+}
+html{background:var(--bg);scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--ac);color:var(--bg)}
+a{text-decoration:none;color:inherit}
+input::placeholder,textarea::placeholder{color:var(--t3)}
+
+/* KEYFRAMES */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideR{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes grow{from{width:0}to{width:var(--w)}}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(200,255,62,.1)}50%{box-shadow:0 0 40px rgba(200,255,62,.25),0 0 80px rgba(200,255,62,.08)}}
+@keyframes borderGlow{0%,100%{border-color:rgba(200,255,62,.15)}50%{border-color:rgba(200,255,62,.4)}}
+@keyframes scrollHint{0%,100%{opacity:.4;transform:translateY(0)}50%{opacity:1;transform:translateY(6px)}}
+
+/* ══════ NAV ══════ */
+.nv{position:fixed;top:0;left:0;right:0;z-index:999;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(6,7,8,.9);backdrop-filter:blur(24px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.04)}
+.nv-l{display:flex;align-items:center;gap:7px;cursor:pointer}
+.nv-dot{width:18px;height:18px;background:var(--ac);border-radius:4px;display:grid;place-items:center;transition:transform .2s}
+.nv-l:hover .nv-dot{transform:rotate(90deg)}
+.nv-dot svg{width:10px;height:10px}
+.nv-n{font-family:var(--mono);font-weight:600;font-size:13.5px;letter-spacing:-.03em;color:var(--tx)}
+.nv-c{display:flex;gap:2px}
+.nv-c button{background:none;border:none;color:var(--t2);font-family:var(--sans);font-size:12px;font-weight:400;padding:5px 13px;border-radius:5px;cursor:pointer;transition:all .12s}
+.nv-c button:hover{color:var(--tx);background:rgba(255,255,255,.04)}
+.nv-c button.on{color:var(--ac)}
+.nv-r{display:flex;align-items:center;gap:8px}
+.nv-lang{font-family:var(--mono);font-size:10.5px;padding:4px 8px;border:1px solid var(--t4);border-radius:4px;color:var(--t3);cursor:pointer;background:none;transition:all .15s;letter-spacing:.06em}
+.nv-lang:hover{color:var(--t2);border-color:var(--t3)}
+.nv-cta{background:var(--ac);color:var(--bg);font-family:var(--sans);font-size:11.5px;font-weight:600;padding:6px 16px;border-radius:5px;border:none;cursor:pointer;transition:all .15s}
+.nv-cta:hover{box-shadow:0 0 20px rgba(200,255,62,.2);transform:translateY(-1px)}
+.nv-ham{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:4px}
+.nv-ham span{display:block;width:18px;height:1.5px;background:var(--t2);border-radius:1px;transition:all .2s}
+.nv-mob{display:none;position:fixed;top:52px;left:0;right:0;bottom:0;background:rgba(6,7,8,.97);backdrop-filter:blur(20px);z-index:998;padding:40px;flex-direction:column;gap:4px}
+.nv-mob.open{display:flex}
+.nv-mob button{background:none;border:none;color:var(--t2);font-family:var(--sans);font-size:18px;font-weight:400;padding:16px 0;cursor:pointer;text-align:left;border-bottom:1px solid rgba(255,255,255,.04);transition:color .12s}
+.nv-mob button:hover,.nv-mob button.on{color:var(--ac)}
+
+/* ══════ LAYOUT ══════ */
+.mx{max-width:1100px;margin:0 auto;padding:0 40px}
+.page{animation:fadeUp .45s cubic-bezier(.16,1,.3,1) both}
+
+/* ══════ HERO ══════ */
+.hero{padding:130px 0 0;min-height:100vh;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-20%;right:-15%;width:700px;height:700px;background:radial-gradient(circle,var(--acg) 0%,transparent 65%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:200px;background:linear-gradient(to top,var(--bg),transparent);pointer-events:none;z-index:2}
+.hero-grain{position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hero-scroll{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;opacity:.5;transition:opacity .2s}
+.hero-scroll:hover{opacity:.8}
+.hero-scroll-text{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.15em;text-transform:uppercase}
+.hero-scroll-arrow{width:16px;height:16px;border-right:1.5px solid var(--t3);border-bottom:1.5px solid var(--t3);transform:rotate(45deg);animation:scrollHint 2s ease infinite}
+
+/* Scroll reveal for sections */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;position:relative;z-index:1}
+.hero-left{padding-top:40px}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;margin-bottom:40px;animation:fadeUp .5s .1s both}
+.hero-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--ac);animation:pulse 2s ease infinite}
+.hero-badge-text{font-family:var(--mono);font-size:10.5px;color:var(--t2);letter-spacing:.1em;text-transform:uppercase}
+.hero h1{font-size:clamp(42px,5.8vw,76px);font-weight:800;line-height:.95;letter-spacing:-.05em;margin-bottom:28px;animation:fadeUp .5s .2s both}
+.hero h1 i{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--ac)}
+.hero-sub{font-size:15.5px;color:var(--t2);line-height:1.8;max-width:400px;margin-bottom:44px;font-weight:300;animation:fadeUp .5s .3s both}
+.hero-acts{display:flex;gap:10px;animation:fadeUp .5s .4s both}
+.btn-ac{background:var(--ac);color:var(--bg);padding:13px 28px;border-radius:7px;font-weight:600;font-size:13.5px;border:none;cursor:pointer;font-family:var(--sans);transition:all .2s;position:relative;overflow:hidden}
+.btn-ac::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);transition:none}
+.btn-ac:hover{box-shadow:0 8px 32px rgba(200,255,62,.18);transform:translateY(-2px)}
+.btn-ac:hover::after{animation:shimmer .6s ease forwards}
+.btn-gh{background:none;border:1px solid var(--t4);color:var(--t2);padding:13px 22px;border-radius:7px;font-size:13.5px;font-weight:400;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-gh:hover{border-color:var(--t3);color:var(--tx)}
+
+/* HERO RIGHT — screener card */
+.hero-right{animation:fadeUp .6s .35s both}
+.scr{background:var(--s1);border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5);animation:borderGlow 4s ease infinite;transition:transform .3s,box-shadow .3s}
+.scr:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 32px 100px rgba(0,0,0,.6),0 0 40px rgba(200,255,62,.06)}
+.scr-head{padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:center}
+.scr-dots{display:flex;gap:5px}
+.scr-dots span{width:8px;height:8px;border-radius:50%;background:var(--s3)}
+.scr-dots span:nth-child(1){background:#ff5c46}
+.scr-dots span:nth-child(2){background:#ffbd2e}
+.scr-dots span:nth-child(3){background:#27c93f}
+.scr-label{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase}
+.scr-filters{padding:12px 18px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.03)}
+.scr-f{font-family:var(--mono);font-size:10px;color:var(--t2);background:var(--s2);border:1px solid rgba(255,255,255,.05);padding:4px 9px;border-radius:4px}
+.scr-body{padding:4px 0}
+.scr-row{display:grid;grid-template-columns:1.6fr .8fr .5fr .5fr;padding:9px 18px;font-size:12px;transition:background .1s;cursor:default;align-items:center}
+.scr-row:hover{background:rgba(255,255,255,.02)}
+.scr-row.head{color:var(--t3);font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:8px 18px}
+.scr-row .nm{color:var(--tx);font-weight:500;font-size:12.5px}
+.scr-row .mn{font-family:var(--mono);font-size:11.5px;color:var(--t2)}
+.scr-row .up{font-family:var(--mono);font-size:11.5px;color:var(--ac);font-weight:500}
+.scr-row .g-bar{height:2px;background:var(--s3);border-radius:1px;overflow:hidden}
+.scr-row .g-bar div{height:100%;background:var(--ac);border-radius:1px}
+.scr-foot{padding:10px 18px;border-top:1px solid rgba(255,255,255,.03);font-family:var(--mono);font-size:9.5px;color:var(--t3);display:flex;justify-content:space-between}
+
+/* METRICS STRIP */
+.mstrip{border-top:1px solid rgba(255,255,255,.04);padding:56px 0;position:relative;z-index:3;background:var(--bg)}
+.mstrip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.mstrip-item{text-align:center;padding:0 20px;border-right:1px solid rgba(255,255,255,.04)}
+.mstrip-item:last-child{border:none}
+.mstrip-v{font-family:var(--mono);font-size:28px;font-weight:600;letter-spacing:-.04em;color:var(--tx);margin-bottom:4px}
+.mstrip-l{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono)}
+
+/* ══════ TICKER ══════ */
+.tick{border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04);padding:11px 0;overflow:hidden;background:var(--s1)}
+.tick-in{display:flex;gap:40px;animation:marquee 35s linear infinite;white-space:nowrap;width:max-content}
+.tick-i{font-family:var(--mono);font-size:11px;color:var(--t3);display:flex;align-items:center;gap:6px}
+.tick-i .dot{width:3px;height:3px;border-radius:50%;background:var(--t4)}
+
+/* ══════ SECTIONS ══════ */
+.sec{padding:100px 0}
+.sl{font-family:var(--mono);font-size:10px;color:var(--ac);text-transform:uppercase;letter-spacing:.16em;margin-bottom:20px}
+.stt{font-size:clamp(26px,3.5vw,42px);font-weight:800;line-height:1.08;letter-spacing:-.04em;max-width:560px}
+.stt i{font-family:var(--serif);font-style:italic;font-weight:400}
+.sde{font-size:14.5px;color:var(--t2);line-height:1.75;margin-top:14px;max-width:440px;font-weight:300}
+
+/* ══════ STEPS ══════ */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:56px;border:1px solid rgba(255,255,255,.05);border-radius:12px;overflow:hidden}
+.stp{padding:40px 30px;background:var(--s1);border-right:1px solid rgba(255,255,255,.04);position:relative;transition:background .25s}
+.stp:last-child{border:none}
+.stp:hover{background:var(--s2)}
+.stp-n{font-family:var(--mono);font-size:9px;color:var(--ac);letter-spacing:.18em;text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:8px}
+.stp-n::after{content:'';flex:1;height:1px;background:rgba(200,255,62,.15)}
+.stp h3{font-size:16.5px;font-weight:600;margin-bottom:10px;letter-spacing:-.02em;line-height:1.2}
+.stp p{font-size:13px;color:var(--t2);line-height:1.65}
+
+/* ══════ FEATURES ══════ */
+.fsec{background:var(--s1);border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04)}
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:48px}
+.fc{background:var(--bg);border:1px solid rgba(255,255,255,.04);border-radius:10px;padding:28px 24px;transition:all .2s}
+.fc:hover{border-color:rgba(255,255,255,.08);transform:translateY(-2px)}
+.fc h3{font-size:14px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em}
+.fc p{font-size:12.5px;color:var(--t2);line-height:1.6}
+.fc.dim{opacity:.45}.fc.dim:hover{opacity:.65}
+.fc .cs{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--coral);background:rgba(255,92,70,.08);padding:2px 7px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase}
+
+/* ══════ USE CASES ══════ */
+.ucg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+.uc{border:1px solid rgba(255,255,255,.04);border-radius:10px;padding:32px 24px;background:var(--s1);transition:border-color .2s}
+.uc:hover{border-color:rgba(255,255,255,.08)}
+.uc-who{font-family:var(--mono);font-size:9.5px;color:var(--ac);text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px}
+.uc q{display:block;font-family:var(--serif);font-size:16.5px;font-style:italic;font-weight:400;line-height:1.4;margin-bottom:14px;color:var(--tx);quotes:none}
+.uc p{font-size:12.5px;color:var(--t2);line-height:1.65}
+
+/* ══════ COMPARISON ══════ */
+.ctb{width:100%;border-collapse:collapse;margin-top:48px}
+.ctb th{text-align:left;padding:12px 18px;font-size:12.5px;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)}
+.ctb th:nth-child(2){color:var(--ac)}
+.ctb td{padding:11px 18px;font-size:12.5px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--t2)}
+.ctb td:first-child{color:var(--tx);font-weight:500}
+.ctb tr:hover td{background:rgba(255,255,255,.015)}
+.ctb .y{color:var(--ac);font-weight:600}.ctb .n{color:var(--t4)}
+
+/* ══════ DATA MODEL ══════ */
+.dmg{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:48px}
+.dmc{background:var(--s1);border:1px solid rgba(255,255,255,.04);border-radius:10px;padding:24px 20px}
+.dmc-l{font-family:var(--mono);font-size:9.5px;color:var(--ac);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+.dmc div+div{font-size:12.5px;color:var(--t2);padding:3px 0;line-height:1.5}
+
+/* ══════ PRICING ══════ */
+.prg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:48px}
+.pr{background:var(--s1);border:1px solid rgba(255,255,255,.04);border-radius:12px;padding:36px 28px;display:flex;flex-direction:column;position:relative;transition:all .2s}
+.pr:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.06)}
+.pr.hi{border-color:var(--ac);background:linear-gradient(var(--s1),var(--s1)) padding-box,linear-gradient(135deg,var(--ac),rgba(200,255,62,.3),var(--ac)) border-box;border:1.5px solid transparent}
+.pr.hi:hover{box-shadow:0 0 40px rgba(200,255,62,.08),0 8px 32px rgba(0,0,0,.3)}
+.pr-pop{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--ac);color:var(--bg);font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 12px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.pr-ti{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--t3);margin-bottom:14px}
+.pr-pr{font-size:36px;font-weight:800;letter-spacing:-.04em;margin-bottom:3px}
+.pr-pr span{font-size:13px;font-weight:400;color:var(--t3)}
+.pr-de{font-size:12.5px;color:var(--t2);margin-bottom:24px;line-height:1.5}
+.pr-ff{flex-grow:1}
+.pr-ff div{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-size:12.5px;color:var(--t2)}
+.pr-ff div::before{content:'\2713';color:var(--ac);font-weight:600;font-size:11px;flex-shrink:0}
+.pr-bt{margin-top:24px;width:100%;padding:12px;border-radius:7px;font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.pr-bt.f{background:var(--ac);color:var(--bg);border:none}
+.pr-bt.f:hover{box-shadow:0 4px 20px rgba(200,255,62,.15)}
+.pr-bt.o{background:none;border:1px solid var(--t4);color:var(--tx)}
+.pr-bt.o:hover{border-color:var(--t3)}
+
+/* ══════ FAQ ══════ */
+.faq{margin-top:48px;max-width:600px}
+.faq-i{border-bottom:1px solid rgba(255,255,255,.04);padding:0;overflow:hidden}
+.faq-i h3{font-size:14.5px;font-weight:600;letter-spacing:-.01em;padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:color .15s}
+.faq-i h3:hover{color:var(--ac)}
+.faq-i h3::after{content:'+';font-family:var(--mono);font-size:16px;color:var(--t3);transition:transform .25s,color .15s}
+.faq-i.open h3::after{transform:rotate(45deg);color:var(--ac)}
+.faq-i p{font-size:13px;color:var(--t2);line-height:1.7;max-height:0;overflow:hidden;padding:0;transition:max-height .35s ease,padding .35s ease,opacity .25s;opacity:0}
+.faq-i.open p{max-height:200px;padding:0 0 20px;opacity:1}
+
+/* ══════ ABOUT ══════ */
+.abg{display:grid;grid-template-columns:1fr 360px;gap:56px;margin-top:48px}
+.abg p{font-size:14.5px;color:var(--t2);line-height:1.8;margin-bottom:16px}
+.pipe{background:var(--s1);border:1px solid rgba(255,255,255,.04);border-radius:10px;padding:28px 24px;height:fit-content}
+.pipe-l{font-family:var(--mono);font-size:9.5px;color:var(--ac);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px}
+.pipe-r{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:12.5px}
+.pipe-r:last-child{border:none}
+.pipe-r .k{color:var(--t3);font-weight:500}.pipe-r .v{color:var(--t2)}
+.road{margin-top:48px;max-width:560px}
+.road-i{display:flex;gap:16px;padding:20px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.road-d{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.road-i h3{font-size:14.5px;font-weight:600;margin-bottom:4px}
+.road-i p{font-size:12.5px;color:var(--t2);line-height:1.6}
+.vtag{display:inline-block;font-family:var(--mono);font-size:8.5px;padding:2px 6px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;vertical-align:middle}
+
+/* ══════ CONTACT ══════ */
+.kong{display:grid;grid-template-columns:1fr 1fr;gap:72px;margin-top:48px}
+.kon-inf div{margin-bottom:20px}
+.kon-inf .kl{font-family:var(--mono);font-size:9.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.kon-inf .kv{font-size:14.5px}
+.kon-fm{background:var(--s1);border:1px solid rgba(255,255,255,.04);border-radius:12px;padding:32px 28px}
+.kon-fm label{display:block;font-family:var(--mono);font-size:9.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.kon-fm input,.kon-fm textarea{width:100%;padding:10px 14px;border-radius:6px;border:1px solid var(--t4);background:var(--bg);color:var(--tx);font-size:13.5px;font-family:var(--sans);outline:none;transition:border-color .12s;margin-bottom:16px}
+.kon-fm input:focus,.kon-fm textarea:focus{border-color:var(--ac)}
+.kon-sent{text-align:center;padding:56px 24px}
+
+/* ══════ CTA BAND ══════ */
+.ctab{border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04);background:var(--s1);padding:80px 0;text-align:center}
+
+/* ══════ FOOTER ══════ */
+.ft{padding:48px 0 36px;border-top:1px solid rgba(255,255,255,.04);background:var(--s1)}
+.ftg{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px;margin-bottom:36px}
+.ftc h4{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--t3);margin-bottom:12px}
+.ftc a,.ftc span{display:block;font-size:12.5px;color:var(--t2);padding:3px 0;transition:color .12s}
+.ftc a:hover{color:var(--tx)}
+.ftb{border-top:1px solid rgba(255,255,255,.03);padding-top:18px;display:flex;justify-content:space-between;font-size:11px;color:var(--t3);font-family:var(--mono)}
+
+/* ══════ RESPONSIVE ══════ */
+@media(max-width:900px){
+  .mx{padding:0 20px}.nv{padding:0 16px}.nv-c{display:none}
+  .nv-ham{display:flex}
+  .hero-grid,.abg,.kong{grid-template-columns:1fr!important}
+  .hero-right{margin-top:32px}
+  .steps,.fgrid,.ucg,.prg,.dmg,.mstrip-grid{grid-template-columns:1fr}
+  .ftg{grid-template-columns:1fr 1fr}
+  .ftb{flex-direction:column;gap:6px;text-align:center}
+  .sec{padding:72px 0}.hero{min-height:auto;padding-bottom:40px}
+  .stp{border-right:none;border-bottom:1px solid rgba(255,255,255,.04)}
+  .stp:last-child{border:none}
+  .mstrip-item{padding:16px 0;border-right:none;border-bottom:1px solid rgba(255,255,255,.04)}
+  .mstrip-item:last-child{border:none}
+  .hero-scroll{display:none}
+  .rg{padding:1rem 0!important}
+}
+@media(max-width:600px){.ftg{grid-template-columns:1fr}.hero h1{font-size:38px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var L={
+sk:{
+np:"Produkt",nc:"Cenn\u00edk",na:"O n\u00e1s",nk:"Kontakt",ns:"Screener",ng:"Z\u00edska\u0165 pr\u00edstup",
+scr_title:"Preh\u013eadaj firmy na\u017eivo.",scr_desc:"Zadaj filtre a okam\u017eite z\u00edskaj shortlist firiem s finan\u010dn\u00fdmi d\u00e1tami. Re\u00e1lne d\u00e1ta z R\u00daZ.",
+hb:"D\u00e1ta aktualizovan\u00e9 mesa\u010dne",h1a:"Presvi\u0165 si",h1b:"firmu.",
+hs:"N\u00e1jdi akvizi\u010dn\u00fd cie\u013e za sekundy. Finan\u010dn\u00e9 d\u00e1ta 100\u00a0000+ slovensk\u00fdch firiem \u2014 filtruj, analyzuj, exportuj.",
+ha1:"Za\u010da\u0165 screening \u2192",ha2:"Ako to funguje",
+scr_l:"SCREENING",scr_f:["IT slu\u017eby","500k\u20132M \u20ac","> 10% mar\u017ea","BA kraj"],
+scr_h:["Firma","Tr\u017eby","Mar\u017ea","Rast"],
+scr_d:[["Meridian Digital","1.84M \u20ac","+18.4%","+22%",92],["Apex Solutions","1.26M \u20ac","+14.7%","+15%",63],["Vertex Cloud","987k \u20ac","+22.1%","+31%",49],["Pragma Code","742k \u20ac","+11.3%","+8%",37],["Luminos Labs","621k \u20ac","+16.9%","+12%",31]],
+scr_ft:["5 v\u00fdsledkov","Zoradenie: Tr\u017eby \u2193"],
+ms_v:["100\u00a0000+","5","32","CC0"],ms_l:["Firiem","Rokov hist\u00f3rie","Metr\u00edk / firma","Verejn\u00e9 d\u00e1ta"],
+tick:["R\u00daZ Open API","\u2022","CC0 licencia","\u2022","Mesa\u010dn\u00e1 aktualiz\u00e1cia","\u2022","Export do Excel","\u2022","5-ro\u010dn\u00e1 hist\u00f3ria","\u2022","32 metr\u00edk","\u2022","100 000+ firiem","\u2022"],
+stl:"Ako to funguje",stt_:"Od ot\u00e1zky k shortlistu.",std_:"\u017diadne manu\u00e1lne klikanie. \u017diadne hodiny v Exceli.",sw:"KROK",
+sn:["01","02","03"],st:["Vyber sektor a regi\u00f3n","Nastav finan\u010dn\u00e9 filtre","Dosta\u0148 shortlist"],
+sd:["SK NACE klasifik\u00e1cia, od cel\u00e9ho Slovenska po konkr\u00e9tne mesto.","Tr\u017eby, ziskovos\u0165, mar\u017ea, zadl\u017eenos\u0165, ROE \u2014 tvoje krit\u00e9ri\u00e1.","Preh\u013eadn\u00e1 tabu\u013eka, klikni na detail, exportuj do Excelu."],
+ucl:"Pre koho",uct:"Tvoj use case. Na\u0161e d\u00e1ta.",
+ucp:["Investor / PE fond","Analytik / M&A","B2B Sales"],
+ucq:["\u00ABH\u013ead\u00e1m akvizi\u010dn\u00fd cie\u013e v stroj\u00e1rstve s tr\u017ebami nad mili\u00f3n.\u00BB","\u00ABPotrbujem comparable companies na valu\u00e1ciu.\u00BB","\u00ABChcem zoznam rast\u00facich IT firiem v Bratislave.\u00BB"],
+ucd:["Nastav sektor, ve\u013ekos\u0165 a rast \u2014 Rentgen ti uk\u00e1\u017ee shortlist firiem sp\u013a\u0148aj\u00facich tvoje investi\u010dn\u00e9 krit\u00e9ri\u00e1.","N\u00e1jdi firmy v rovnakom sektore. Porovnaj mar\u017ee, ROE, zadl\u017eenos\u0165. Exportuj do modelu.","Filtruj pod\u013ea sektora, lokality a tr\u017eieb. Identifikuj firmy s budgetom na tvoj produkt."],
+cl:"Za\u010dni teraz",ct__:"Presta\u0148 klika\u0165 po registeruz.sk.",cd__:"Prv\u00fdch 100 pou\u017e\u00edvate\u013eov dostane Pro pl\u00e1n na 3 mesiace zadarmo.",cb_:"Z\u00edska\u0165 early access \u2192",
+pl:"Produkt",pt_:"V\u0161etko \u010do potrebuje\u0161 na investment screening.",pd_:"Rentgen spracov\u00e1va verejn\u00e9 finan\u010dn\u00e9 d\u00e1ta zo slovensk\u00e9ho registra.",
+ft_:["Hromadn\u00fd screening","5 rokov hist\u00f3rie","32 metr\u00edk na firmu","Export do Excelu","Sektorov\u00fd benchmark","Red / Green flags","Investment score","Peer groups","Watchlist"],
+fd_:["Preh\u013eadaj tis\u00edce firiem naraz pod\u013ea sektora a finan\u010dn\u00fdch parametrov.","Finan\u010dn\u00e9 d\u00e1ta za 2020\u20132024. Trend je d\u00f4le\u017eitej\u0161\u00ed ako snapshot.","Tr\u017eby, zisk, ROE, zadl\u017eenos\u0165, current ratio, odhad zamestnancov.","Stiahni shortlist alebo detail firmy priamo do CSV/Excel.","Porovnaj firmu vo\u010di medi\u00e1nu sektora.","Automatick\u00e9 upozornenia \u2014 z\u00e1porn\u00e9 imanie, klesaj\u00face tr\u017eby.","Composite sk\u00f3re 1\u2013100 na z\u00e1klade rastu a stability.","N\u00e1jdi 5 najporovnate\u013enej\u0161\u00edch firiem.","Ulo\u017e si firmy, dostane\u0161 upozornenie pri zmene."],
+fg_:[0,0,0,0,1,1,1,1,1],
+dml:"D\u00e1tov\u00fd model",dmt_:"32 metr\u00edk na firmu, za ka\u017ed\u00fd rok.",dmd_:"V\u0161etky d\u00e1ta z verejn\u00e9ho R\u00daZ.",
+dmc_:["Identifik\u00e1cia","S\u00favaha \u2014 Akt\u00edva","S\u00favaha \u2014 Pas\u00edva","V\u00fdkaz Z&S","Vypo\u010d\u00edtan\u00e9","\u010casov\u00e9 rady"],
+dmi_:[["I\u010cO, DI\u010c, N\u00e1zov","SK NACE, Pr\u00e1vna forma","Ve\u013ekos\u0165, Mesto, Rok"],["Celkov\u00fd majetok","Neobe\u017en\u00fd / Obe\u017en\u00fd","Poh\u013ead\u00e1vky, Peniaze"],["Vlastn\u00e9 imanie","Z\u00e4v\u00e4zky celkom/dlh./kr.","Bankov\u00e9 \u00favery, Rezervy"],["Tr\u017eby celkom","Pridan\u00e1 hodnota","VH po zdanen\u00ed"],["Mar\u017ea, ROE","Zadl\u017eenos\u0165, Current ratio","Odhad zamestnancov"],["D\u00e1ta 2020\u20132024","Y/Y zmeny","Trendov\u00e1 anal\u00fdza"]],
+cml:"Porovnanie",cmt:"Pre\u010do nie registeruz.sk alebo Finstat?",cmd:"Na investment screening sme presne to, \u010do potrebuje\u0161.",
+cc_:["","Rentgen","Finstat","registeruz.sk"],
+cf_:["Cena","Hromadn\u00e9 vyh\u013ead\u00e1vanie","Finan\u010dn\u00e9 filtre","5 rokov hist\u00f3rie","Investment metriky","Benchmark","Export","Zameranie"],
+cv_:[["Freemium","200+\u20ac/r","Zadarmo"],["\u2713","Obmedz.","\u2717"],["\u2713","Z\u00e1kladn\u00e9","\u2717"],["\u2713","\u2713","Manu\u00e1lne"],["\u2713","\u010cias.","\u2717"],["\u2713(v2)","\u2717","\u2717"],["\u2713","Plat.","\u2717"],["Investori","Gener.","Verejn."]],
+rc:"Pripraven\u00fd?",rb:"Z\u00edska\u0165 pr\u00edstup \u2192",
+prl:"Cenn\u00edk",prt_:"Za\u010dni zadarmo.",prd_:"\u017diadne skryt\u00e9 poplatky.",prp:"Najob\u013e\u00fabenej\u0161\u00ed",
+pn:["Free","Pro","Enterprise"],pp:["0\u20ac","29\u20ac","Custom"],pper:["/mes","/mes",""],
+ppd:["Ob\u010dasn\u00e9 pou\u017eitie.","Pre akt\u00edvnych investorov.","Pre t\u00edmy a firmy."],
+ppf:[["10 vyh\u013ead\u00e1van\u00ed/de\u0148","Z\u00e1kladn\u00e9 filtre","Detail \u2014 5 rokov","Obmedz. export"],["Neobmedzen\u00e9","V\u0161etky metriky","Neobmedz. export","Benchmark","Red/Green flags","Score"],["V\u0161etko z Pro","API","Dedik. support","Custom integr.","Bulk export","SLA"]],
+ppb:["Registrova\u0165 sa","Z\u00edska\u0165 Pro","Kontaktova\u0165"],
+fql:"FAQ",fqt_:"\u010cast\u00e9 ot\u00e1zky",
+fqq:["M\u00f4\u017eem vysk\u00fa\u0161a\u0165 zadarmo?","Odkia\u013e s\u00fa d\u00e1ta?","Ako \u010dasto aktualiz\u00e1cia?","Ak\u00e1 hist\u00f3ria?","Pl\u00e1nujete \u010cesko?"],
+fqa:["\u00c1no. Free nem\u00e1 \u010dasov\u00fd limit \u2014 10 vyh\u013ead\u00e1van\u00ed/de\u0148.","R\u00daZ Open API, MF SR. CC0 licencia.","Mesa\u010dne. Automatick\u00fd pipeline.","5 rokov \u2014 2020\u20132024.","Roadmap v2 \u2014 ARES / Justice.cz."],
+al:"O n\u00e1s",at_:"Stav\u00edme infra\u0161trukt\u00faru pre lep\u0161ie investi\u010dn\u00e9 rozhodnutia.",
+ap1:"Rentgen vznikol z frustr\u00e1cie. Na Slovensku h\u013ead\u00e1\u0161 firmu na akviz\u00edciu \u2014 bu\u010f klik\u00e1\u0161 na registeruz.sk, alebo plat\u00ed\u0161 stovky eur za generick\u00e9 n\u00e1stroje.",
+ap2:"Automaticky s\u0165ahujeme verejn\u00e9 finan\u010dn\u00e9 d\u00e1ta z R\u00daZ, spracov\u00e1vame ich a d\u00e1vame investorom n\u00e1stroj, ktor\u00fd u\u0161etr\u00ed hodiny pr\u00e1ce.",
+ap3:"V\u0161etky d\u00e1ta s\u00fa verejn\u00e9, CC0. \u017diadne pr\u00e1vne obmedzenia.",
+pipl:"Pipeline",pipk:["Zdroj","Licencia","Pokrytie","Hist\u00f3ria","Metriky","Aktu.","Stack"],pipv:["R\u00daZ API","CC0","100k+","2020\u20132024","32/firma/rok","Mesa\u010dne","Python, FastAPI"],
+rl:"Roadmap",rt_:"Kam smerujeme.",ract:"AKT\u00cdVNE",
+rv:["v1 \u2014 MVP","v2 \u2014 Benchmark","v3 \u2014 Watchlist","v4 \u2014 \u010cesko"],
+rdd:["Screening, filtre, export, 5 rokov.","Benchmark, flags, score, peers.","Notifik\u00e1cie, API.","ARES / Justice.cz."],ro:[1,0,0,0],
+kl:"Kontakt",kt_:"Po\u010fme sa rozpr\u00e1va\u0165.",kd_:"Early access, ot\u00e1zka, alebo enterprise?",
+ke:"Email",kea:"Early access",kead:"Prv\u00fdch 100 \u2192 Pro 3 mesiace free",
+kfn:"Meno",kfnp:"J\u00e1n Nov\u00e1k",kfe:"Email",kfep:"jan@firma.sk",kfc:"Firma",kfcp:"Nepovinn\u00e9",kfm:"Spr\u00e1va",kfmp:"\u010co \u0165a zauj\u00edma?",kfb:"Odosla\u0165 \u2192",
+ks:"Odoslan\u00e9.",ksd:"Ozveme sa.",
+f1t:"Produkt",f1l:[["Funkcie","produkt"],["Cenn\u00edk","cennik"]],f2t:"Firma",f2l:[["O n\u00e1s","o-nas"],["Kontakt","kontakt"]],f3t:"D\u00e1ta",f3i:["R\u00daZ Open API","CC0","Mesa\u010dne"],
+fb1:"\u00a9 2026 Rentgen",fb2:"Register \u00fa\u010dtovn\u00fdch z\u00e1vierok SR",ftg:"Investi\u010dn\u00fd screening pre SK trh."
+},
+en:{
+np:"Product",nc:"Pricing",na:"About",nk:"Contact",ns:"Screener",ng:"Get Access",
+scr_title:"Browse companies live.",scr_desc:"Set filters and instantly get a shortlist with financial data. Real data from R\u00daZ.",
+hb:"Data updated monthly",h1a:"X-ray any",h1b:"company.",
+hs:"Find your acquisition target in seconds. Financial data on 100,000+ Slovak companies \u2014 filter, analyze, export.",
+ha1:"Start screening \u2192",ha2:"How it works",
+scr_l:"SCREENING",scr_f:["IT services","500k\u20132M \u20ac","> 10% margin","BA region"],
+scr_h:["Company","Revenue","Margin","Growth"],
+scr_d:[["Meridian Digital","1.84M \u20ac","+18.4%","+22%",92],["Apex Solutions","1.26M \u20ac","+14.7%","+15%",63],["Vertex Cloud","987k \u20ac","+22.1%","+31%",49],["Pragma Code","742k \u20ac","+11.3%","+8%",37],["Luminos Labs","621k \u20ac","+16.9%","+12%",31]],
+scr_ft:["5 results","Sort: Revenue \u2193"],
+ms_v:["100,000+","5","32","CC0"],ms_l:["Companies","Years","Metrics","Public data"],
+tick:["R\u00daZ Open API","\u2022","CC0 license","\u2022","Monthly updates","\u2022","Excel export","\u2022","5-year history","\u2022","32 metrics","\u2022","100,000+ companies","\u2022"],
+stl:"How it works",stt_:"From question to shortlist.",std_:"No manual clicking. No hours in Excel.",sw:"STEP",
+sn:["01","02","03"],st:["Choose sector & region","Set financial filters","Get your shortlist"],
+sd:["SK NACE, from all Slovakia to a city.","Revenue, margin, leverage, ROE.","Clean table, detail, or Excel export."],
+ucl:"Use cases",uct:"Your use case. Our data.",
+ucp:["Investor / PE fund","Analyst / M&A","B2B Sales"],
+ucq:["\u00ABAcquisition target in manufacturing, revenue > \u20ac1M.\u00BB","\u00ABComparable companies for valuation.\u00BB","\u00ABGrowing IT companies in Bratislava.\u00BB"],
+ucd:["Set sector, size, growth \u2014 get a matching shortlist.","Same sector, same size. Compare margins, ROE, leverage.","Filter by sector, location, revenue. Find companies with budget."],
+cl:"Get started",ct__:"Stop clicking government registers.",cd__:"First 100 users get Pro free for 3 months.",cb_:"Get early access \u2192",
+pl:"Product",pt_:"Everything for investment screening.",pd_:"Rentgen processes public financial data from the Slovak register.",
+ft_:["Bulk screening","5 years of history","32 metrics/company","Excel export","Sector benchmark","Red/Green flags","Investment score","Peer groups","Watchlist"],
+fd_:["Thousands of companies by sector and financials.","2020\u20132024 data. Trend over snapshot.","Revenue, ROE, leverage, current ratio, employees.","Download shortlist or detail to CSV/Excel.","Company vs sector median.","Alerts \u2014 negative equity, declining revenue.","Score 1\u2013100: growth, profitability, stability.","5 most comparable companies.","Save companies, get notified."],
+fg_:[0,0,0,0,1,1,1,1,1],
+dml:"Data model",dmt_:"32 metrics per company, per year.",dmd_:"All data from public R\u00daZ.",
+dmc_:["Identification","Assets","Liabilities","Income","Ratios","Time series"],
+dmi_:[["ID, Tax ID, Name","NACE, Legal form","Size, City, Year"],["Total assets","Current/Non-current","Receivables, Cash"],["Equity","Liabilities total/long/short","Loans, Provisions"],["Total revenue","Added value","Net income"],["Margin, ROE","Leverage, Current ratio","Employee est."],["2020\u20132024","Y/Y changes","Trend analysis"]],
+cml:"Comparison",cmt:"Why not registeruz.sk or Finstat?",cmd:"For screening, we are what you need.",
+cc_:["","Rentgen","Finstat","registeruz.sk"],
+cf_:["Price","Bulk search","Filters","5yr history","Inv. metrics","Benchmark","Export","Focus"],
+cv_:[["Freemium","\u20ac200+/yr","Free"],["\u2713","Limited","\u2717"],["\u2713","Basic","\u2717"],["\u2713","\u2713","Manual"],["\u2713","Partial","\u2717"],["\u2713(v2)","\u2717","\u2717"],["\u2713","Paid","\u2717"],["Investors","Generic","Public"]],
+rc:"Ready?",rb:"Get access \u2192",
+prl:"Pricing",prt_:"Start free.",prd_:"No hidden fees.",prp:"Most popular",
+pn:["Free","Pro","Enterprise"],pp:["\u20ac0","\u20ac29","Custom"],pper:["/mo","/mo",""],
+ppd:["Occasional use.","Active investors.","Teams & companies."],
+ppf:[["10 searches/day","Basic filters","Detail \u2014 5 years","Limited export"],["Unlimited","All metrics","Unlimited export","Benchmark","Red/Green flags","Score"],["All Pro","API","Dedicated support","Custom integr.","Bulk export","SLA"]],
+ppb:["Sign up","Get Pro","Contact us"],
+fql:"FAQ",fqt_:"Common questions",
+fqq:["Free trial?","Data source?","Update frequency?","History?","Czech data?"],
+fqa:["Yes, no time limit \u2014 10/day.","R\u00daZ Open API, MF SR. CC0.","Monthly, auto pipeline.","2020\u20132024, full series.","Roadmap v2 \u2014 ARES/Justice.cz."],
+al:"About",at_:"Infrastructure for better investment decisions.",
+ap1:"Rentgen: frustration-born. Acquisition targets in Slovakia = registeruz.sk clicking or paying hundreds for generic tools.",
+ap2:"We auto-download R\u00daZ data, process it, give investors a tool saving hours.",
+ap3:"All public, CC0. No restrictions.",
+pipl:"Pipeline",pipk:["Source","License","Coverage","History","Metrics","Updates","Stack"],pipv:["R\u00daZ API","CC0","100k+","2020\u20132024","32/co/yr","Monthly","Python, FastAPI"],
+rl:"Roadmap",rt_:"Where we are headed.",ract:"ACTIVE",
+rv:["v1 \u2014 MVP","v2 \u2014 Benchmark","v3 \u2014 Watchlist","v4 \u2014 Czech Rep."],
+rdd:["Screening, filters, export, 5 years.","Benchmark, flags, score, peers.","Notifications, API.","ARES / Justice.cz."],ro:[1,0,0,0],
+kl:"Contact",kt_:"Let\u2019s talk.",kd_:"Early access, questions, or enterprise?",
+ke:"Email",kea:"Early access",kead:"First 100 \u2192 Pro free 3 months",
+kfn:"Name",kfnp:"John Smith",kfe:"Email",kfep:"john@co.com",kfc:"Company",kfcp:"Optional",kfm:"Message",kfmp:"Interested in?",kfb:"Send \u2192",
+ks:"Sent.",ksd:"We will be in touch.",
+f1t:"Product",f1l:[["Features","produkt"],["Pricing","cennik"]],f2t:"Company",f2l:[["About","o-nas"],["Contact","kontakt"]],f3t:"Data",f3i:["R\u00daZ API","CC0","Monthly"],
+fb1:"\u00a9 2026 Rentgen",fb2:"Register of Financial Statements SR",ftg:"Investment screening for the Slovak market."
+}
+};
+
+var S={p:window.location.hash.slice(2)||"",l:localStorage.getItem("rl")||"sk",sent:0};
+function g(k){return L[S.l][k]}
+function go(p){S.p=p;window.location.hash="/"+p;window.scrollTo(0,0);R()}
+function sl(x){S.l=x;localStorage.setItem("rl",x);R()}
+window.addEventListener("hashchange",function(){S.p=window.location.hash.slice(2)||"";R()});
+
+var SV='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#060708" stroke-width="3.5"><circle cx="12" cy="12" r="7.5"/><line x1="12" y1="4.5" x2="12" y2="19.5"/></svg>';
+
+function rN(){var p=S.p,a=function(x){return p===x?" on":""};
+return '<nav class="nv"><div class="nv-l" onclick="go(\'\')"><div class="nv-dot">'+SV+'</div><span class="nv-n">rentgen</span></div><div class="nv-c"><button class="'+a("produkt")+'" onclick="go(\'produkt\')">'+g("np")+'</button><button class="'+a("cennik")+'" onclick="go(\'cennik\')">'+g("nc")+'</button><button class="'+a("o-nas")+'" onclick="go(\'o-nas\')">'+g("na")+'</button><button class="'+a("kontakt")+'" onclick="go(\'kontakt\')">'+g("nk")+'</button><button class="'+a("screener")+'" onclick="go(\'screener\')" style="color:var(--ac);font-weight:600">'+g("ns")+'</button></div><div class="nv-r"><button class="nv-lang" onclick="sl(\''+(S.l==="sk"?"en":"sk")+'\')">'+(S.l==="sk"?"EN":"SK")+'</button><button class="nv-cta" onclick="go(\'screener\')">'+g("ns")+'</button><button class="nv-ham" onclick="toggleMob()" aria-label="Menu"><span></span><span></span><span></span></button></div></nav><div class="nv-mob" id="mob-menu"><button class="'+a("produkt")+'" onclick="go(\'produkt\');closeMob()">'+g("np")+'</button><button class="'+a("cennik")+'" onclick="go(\'cennik\');closeMob()">'+g("nc")+'</button><button class="'+a("o-nas")+'" onclick="go(\'o-nas\');closeMob()">'+g("na")+'</button><button class="'+a("kontakt")+'" onclick="go(\'kontakt\');closeMob()">'+g("nk")+'</button><button class="'+a("screener")+'" onclick="go(\'screener\');closeMob()" style="color:var(--ac)">'+g("ns")+'</button></div>'}
+
+function rF(){
+var c1=g("f1l").map(function(x){return '<a href="#" onclick="go(\''+x[1]+'\');return false">'+x[0]+"</a>"}).join("");
+var c2=g("f2l").map(function(x){return '<a href="#" onclick="go(\''+x[1]+'\');return false">'+x[0]+"</a>"}).join("");
+var c3=g("f3i").map(function(x){return '<span style="color:var(--t3)">'+x+"</span>"}).join("");
+return '<footer class="ft"><div class="mx"><div class="ftg"><div><div style="display:flex;align-items:center;gap:7px;margin-bottom:10px"><div class="nv-dot" style="width:16px;height:16px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#060708" stroke-width="3.5"><circle cx="12" cy="12" r="7.5"/><line x1="12" y1="4.5" x2="12" y2="19.5"/></svg></div><span class="nv-n" style="font-size:12px">rentgen</span></div><p style="font-size:11.5px;color:var(--t3);line-height:1.5;max-width:220">'+g("ftg")+'</p></div><div class="ftc"><h4>'+g("f1t")+'</h4>'+c1+'</div><div class="ftc"><h4>'+g("f2t")+'</h4>'+c2+'</div><div class="ftc"><h4>'+g("f3t")+'</h4>'+c3+'</div></div><div class="ftb"><span>'+g("fb1")+'</span><span>'+g("fb2")+"</span></div></div></footer>"}
+
+function rTick(){var items=g("tick"),h="";for(var i=0;i<4;i++)for(var j=0;j<items.length;j++)h+='<span class="tick-i">'+items[j]+"</span>";
+return '<div class="tick"><div class="tick-in">'+h+"</div></div>"}
+
+function rHome(){
+var sd=g("scr_d"),sh=g("scr_h"),sf=g("scr_f"),sft=g("scr_ft");
+var scr_rows="";for(var i=0;i<sd.length;i++)scr_rows+='<div class="scr-row"><span class="nm">'+sd[i][0]+'</span><span class="mn">'+sd[i][1]+'</span><span class="up">'+sd[i][2]+'</span><span class="up">'+sd[i][3]+'</span></div><div style="padding:0 18px 6px"><div class="g-bar"><div style="width:'+sd[i][4]+'%;background:var(--ac);animation:grow .6s '+(i*.1)+'s ease both"></div></div></div>';
+var scr_filters="";for(i=0;i<sf.length;i++)scr_filters+='<span class="scr-f">'+sf[i]+"</span>";
+
+var msv=g("ms_v"),msl=g("ms_l"),mstrip="";
+for(i=0;i<4;i++)mstrip+='<div class="mstrip-item"><div class="mstrip-v">'+msv[i]+'</div><div class="mstrip-l">'+msl[i]+"</div></div>";
+
+var sn=g("sn"),stt=g("st"),sdd=g("sd"),sw=g("sw"),steps="";
+for(i=0;i<3;i++)steps+='<div class="stp"><div class="stp-n">'+sw+" "+sn[i]+'</div><h3>'+stt[i]+'</h3><p>'+sdd[i]+"</p></div>";
+
+var ucp=g("ucp"),ucq=g("ucq"),ucd=g("ucd"),ucs="";
+for(i=0;i<3;i++)ucs+='<div class="uc"><div class="uc-who">'+ucp[i]+'</div><q>'+ucq[i]+'</q><p>'+ucd[i]+"</p></div>";
+
+return '<div class="page"><section class="hero"><div class="hero-grain"></div><div class="mx"><div class="hero-grid"><div class="hero-left"><div class="hero-badge"><span class="hero-badge-dot"></span><span class="hero-badge-text">'+g("hb")+'</span></div><h1>'+g("h1a")+'<br><i>'+g("h1b")+'</i></h1><p class="hero-sub">'+g("hs")+'</p><div class="hero-acts"><button class="btn-ac" onclick="go(\'screener\')">'+g("ha1")+'</button><button class="btn-gh" onclick="go(\'produkt\')">'+g("ha2")+'</button></div></div><div class="hero-right"><div class="scr" onclick="go(\'screener\')" style="cursor:pointer"><div class="scr-head"><span class="scr-label">'+g("scr_l")+'</span><span class="scr-label" style="color:var(--ac);display:flex;align-items:center;gap:4px"><span style="width:4px;height:4px;border-radius:50%;background:var(--ac);animation:pulse 1.5s ease infinite"></span>LIVE</span></div><div class="scr-filters">'+scr_filters+'</div><div class="scr-body"><div class="scr-row head"><span>'+sh[0]+'</span><span>'+sh[1]+'</span><span>'+sh[2]+'</span><span>'+sh[3]+'</span></div>'+scr_rows+'</div><div class="scr-foot"><span>'+sft[0]+'</span><span>'+sft[1]+'</span></div></div></div></div></div><div class="hero-scroll" onclick="window.scrollTo({top:window.innerHeight,behavior:\'smooth\'})"><span class="hero-scroll-text">Scroll</span><span class="hero-scroll-arrow"></span></div></section><div class="mstrip"><div class="mx"><div class="mstrip-grid">'+mstrip+'</div></div></div>'+rTick()+'<section class="sec reveal"><div class="mx"><div class="sl">'+g("stl")+'</div><h2 class="stt">'+g("stt_")+'</h2><p class="sde">'+g("std_")+'</p><div class="steps">'+steps+'</div></div></section><section class="sec reveal" style="background:var(--s1);border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04)"><div class="mx"><div class="sl">'+g("ucl")+'</div><h2 class="stt">'+g("uct")+'</h2><div class="ucg">'+ucs+'</div></div></section><div class="ctab reveal"><div class="mx"><div class="sl">'+g("cl")+'</div><h2 class="stt" style="max-width:460px;margin:0 auto 14px">'+g("ct__")+'</h2><p style="font-size:14.5px;color:var(--t2);max-width:380px;margin:0 auto 32px;line-height:1.7">'+g("cd__")+'</p><button class="btn-ac" style="padding:14px 32px" onclick="go(\'kontakt\')">'+g("cb_")+"</button></div></div></div>"}
+
+function rProdukt(){
+var ftt=g("ft_"),fdd=g("fd_"),fgg=g("fg_"),feats="";
+for(var i=0;i<ftt.length;i++)feats+='<div class="fc'+(fgg[i]?" dim":"")+'"><h3>'+ftt[i]+'</h3><p>'+fdd[i]+"</p>"+(fgg[i]?'<span class="cs">COMING SOON</span>':"")+"</div>";
+var dmc=g("dmc_"),dmi=g("dmi_"),dms="";
+for(i=0;i<dmc.length;i++){dms+='<div class="dmc"><div class="dmc-l">'+dmc[i]+"</div>";for(var j=0;j<dmi[i].length;j++)dms+="<div>"+dmi[i][j]+"</div>";dms+="</div>"}
+var cc=g("cc_"),cf=g("cf_"),cv=g("cv_"),ct="<tr>";
+for(i=0;i<cc.length;i++)ct+='<th'+(i===1?' style="color:var(--ac)"':"")+">"+cc[i]+"</th>";ct+="</tr>";
+for(i=0;i<cf.length;i++){ct+='<tr><td style="color:var(--tx);font-weight:500">'+cf[i]+"</td>";for(j=0;j<3;j++){var v=cv[i][j];ct+='<td class="'+(v==="\u2713"?"y":v==="\u2717"?"n":"")+'">'+v+"</td>"}ct+="</tr>"}
+return '<div class="page"><section class="sec" style="padding-top:110px"><div class="mx"><div class="sl">'+g("pl")+'</div><h2 class="stt">'+g("pt_")+'</h2><p class="sde">'+g("pd_")+'</p></div></section><section class="fsec sec" style="padding-top:0"><div class="mx"><div class="fgrid">'+feats+'</div></div></section><section class="sec"><div class="mx"><div class="sl">'+g("dml")+'</div><h2 class="stt">'+g("dmt_")+'</h2><p class="sde">'+g("dmd_")+'</p><div class="dmg">'+dms+'</div></div></section><section class="sec" style="background:var(--s1);border-top:1px solid rgba(255,255,255,.04)"><div class="mx"><div class="sl">'+g("cml")+'</div><h2 class="stt">'+g("cmt")+'</h2><p class="sde" style="margin-bottom:40px">'+g("cmd")+'</p><div style="overflow-x:auto"><table class="ctb" style="min-width:540px">'+ct+'</table></div></div></section><div class="ctab"><div class="mx"><h2 class="stt" style="margin-bottom:18px">'+g("rc")+'</h2><button class="btn-ac" onclick="go(\'kontakt\')">'+g("rb")+"</button></div></div></div>"}
+
+function rCennik(){
+var pn=g("pn"),pp=g("pp"),pper=g("pper"),ppd=g("ppd"),ppf=g("ppf"),ppb=g("ppb"),plans="";
+for(var i=0;i<3;i++){var ff="";for(var j=0;j<ppf[i].length;j++)ff+="<div>"+ppf[i][j]+"</div>";
+plans+='<div class="pr'+(i===1?" hi":"")+'">'+(i===1?'<div class="pr-pop">'+g("prp")+"</div>":"")+'<div class="pr-ti">'+pn[i]+'</div><div class="pr-pr">'+pp[i]+'<span>'+pper[i]+'</span></div><p class="pr-de">'+ppd[i]+'</p><div class="pr-ff">'+ff+'</div><button class="pr-bt '+(i===1?"f":"o")+'" onclick="go(\'kontakt\')">'+ppb[i]+"</button></div>"}
+var fqq=g("fqq"),fqa=g("fqa"),faqs="";
+for(i=0;i<fqq.length;i++)faqs+='<div class="faq-i"><h3>'+fqq[i]+'</h3><p>'+fqa[i]+"</p></div>";
+return '<div class="page"><section class="sec" style="padding-top:110px;text-align:center"><div class="mx"><div class="sl">'+g("prl")+'</div><h2 class="stt" style="margin:0 auto">'+g("prt_")+'</h2><p style="font-size:14.5px;color:var(--t2);max-width:360px;margin:12px auto 0;line-height:1.7">'+g("prd_")+'</p></div></section><section class="sec" style="padding-top:0"><div class="mx"><div class="prg">'+plans+'</div></div></section><section class="sec" style="background:var(--s1);border-top:1px solid rgba(255,255,255,.04)"><div class="mx"><div class="sl">'+g("fql")+'</div><h2 class="stt">'+g("fqt_")+'</h2><div class="faq">'+faqs+"</div></div></section></div>"}
+
+function rAbout(){
+var pipk=g("pipk"),pipv=g("pipv"),pipe="";
+for(var i=0;i<pipk.length;i++)pipe+='<div class="pipe-r"><span class="k">'+pipk[i]+'</span><span class="v">'+pipv[i]+"</span></div>";
+var rv=g("rv"),rdd=g("rdd"),ro=g("ro"),road="";
+for(i=0;i<rv.length;i++)road+='<div class="road-i"><div class="road-d" style="background:'+(ro[i]?"var(--ac)":"var(--t4)")+'"></div><div><h3>'+rv[i]+(ro[i]?'<span class="vtag" style="background:rgba(200,255,62,.08);color:var(--ac)">'+g("ract")+"</span>":"")+'</h3><p>'+rdd[i]+"</p></div></div>";
+return '<div class="page"><section class="sec" style="padding-top:110px"><div class="mx"><div class="sl">'+g("al")+'</div><h2 class="stt">'+g("at_")+'</h2><div class="abg"><div><p>'+g("ap1")+'</p><p>'+g("ap2")+'</p><p>'+g("ap3")+'</p></div><div class="pipe"><div class="pipe-l">'+g("pipl")+"</div>"+pipe+'</div></div></div></section><section class="sec" style="background:var(--s1);border-top:1px solid rgba(255,255,255,.04)"><div class="mx"><div class="sl">'+g("rl")+'</div><h2 class="stt">'+g("rt_")+'</h2><div class="road">'+road+"</div></div></section></div>"}
+
+function rKontakt(){
+var form=S.sent?'<div class="kon-fm kon-sent"><div style="font-size:24px;color:var(--ac);margin-bottom:10px">\u2713</div><h3 style="font-size:16px;font-weight:600;margin-bottom:6px">'+g("ks")+'</h3><p style="font-size:13px;color:var(--t2)">'+g("ksd")+"</p></div>":'<div class="kon-fm"><label>'+g("kfn")+'</label><input type="text" placeholder="'+g("kfnp")+'"><label>'+g("kfe")+'</label><input type="email" placeholder="'+g("kfep")+'"><label>'+g("kfc")+'</label><input type="text" placeholder="'+g("kfcp")+'"><label>'+g("kfm")+'</label><textarea rows="4" placeholder="'+g("kfmp")+'" style="resize:vertical"></textarea><button class="btn-ac" style="width:100%;text-align:center;justify-content:center" onclick="S.sent=1;R()">'+g("kfb")+"</button></div>";
+return '<div class="page"><section class="sec" style="padding-top:110px;min-height:80vh"><div class="mx"><div class="sl">'+g("kl")+'</div><h2 class="stt">'+g("kt_")+'</h2><p class="sde">'+g("kd_")+'</p><div class="kong"><div class="kon-inf"><div><div class="kl">'+g("ke")+'</div><div class="kv">hello@rentgen.sk</div></div><div><div class="kl">'+g("kea")+'</div><div class="kv">'+g("kead")+"</div></div></div>"+form+"</div></div></section></div>"}
+
+function rScreener(){
+return '<div class="page"><section style="padding-top:100px;padding-bottom:20px"><div class="mx"><div class="sl" style="animation:fadeUp .4s .1s both">'+g("ns")+'</div><h2 class="stt" style="animation:fadeUp .4s .15s both;max-width:500px">'+g("scr_title")+'</h2><p class="sde" style="animation:fadeUp .4s .2s both">'+g("scr_desc")+'</p></div></section><section style="padding-top:0;min-height:60vh;padding-bottom:80px"><div id="screener-mount"></div></section></div>'
+}
+
+function R(){
+var p;switch(S.p){case"produkt":p=rProdukt();break;case"cennik":p=rCennik();break;case"o-nas":p=rAbout();break;case"kontakt":p=rKontakt();break;case"screener":p=rScreener();break;default:p=rHome()}
+document.getElementById("app").innerHTML=rN()+"<main>"+p+"</main>"+(S.p==="screener"?"":rF());
+document.title="Rentgen \u2014 "+(S.l==="sk"?"Presvi\u0165 si firmu":"X-ray any company");
+if(S.p==="screener"){if(typeof RentgenScreener!=="undefined"){RentgenScreener.API_URL="https://web-production-7fcc3.up.railway.app";RentgenScreener.mount("#screener-mount")}}
+}
+R();
+
+/* ═══ Scroll reveal ═══ */
+function initReveal(){
+var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add("visible");obs.unobserve(e.target)}})},{threshold:.15,rootMargin:"0px 0px -40px 0px"});
+document.querySelectorAll(".reveal").forEach(function(el){obs.observe(el)})
+}
+
+/* ═══ FAQ accordion ═══ */
+function initFAQ(){
+document.querySelectorAll(".faq-i h3").forEach(function(h){
+h.addEventListener("click",function(){var item=h.parentElement;var wasOpen=item.classList.contains("open");
+document.querySelectorAll(".faq-i.open").forEach(function(i){i.classList.remove("open")});
+if(!wasOpen)item.classList.add("open")})})
+}
+
+/* ═══ Mobile menu ═══ */
+function toggleMob(){var m=document.getElementById("mob-menu");if(m)m.classList.toggle("open")}
+function closeMob(){var m=document.getElementById("mob-menu");if(m)m.classList.remove("open")}
+
+/* ═══ Count-up animation for metrics strip ═══ */
+function initCountUp(){
+var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){
+var items=e.target.querySelectorAll(".mstrip-v");
+items.forEach(function(el){
+var raw=el.textContent.replace(/\s/g,"");var match=raw.match(/^([\d,]+)/);
+if(!match)return;var target=parseInt(match[1].replace(/,/g,""));if(isNaN(target)||target===0)return;
+var suffix=raw.replace(match[1],"");var dur=800;var start=performance.now();
+el.textContent="0"+suffix;
+function tick(now){var p=Math.min((now-start)/dur,1);var eased=1-Math.pow(1-p,3);
+var v=Math.round(target*eased);el.textContent=v.toLocaleString("sk-SK")+suffix;
+if(p<1)requestAnimationFrame(tick)}
+requestAnimationFrame(tick)})
+obs.unobserve(e.target)}})},{threshold:.5});
+var strip=document.querySelector(".mstrip-grid");if(strip)obs.observe(strip)
+}
+
+/* ═══ Nav background on scroll ═══ */
+function initNavScroll(){
+var nav=document.querySelector(".nv");if(!nav)return;
+window.addEventListener("scroll",function(){
+if(window.scrollY>20)nav.style.borderBottomColor="rgba(255,255,255,.08)";
+else nav.style.borderBottomColor="rgba(255,255,255,.04)"
+},{passive:true})
+}
+
+/* ═══ Init all after render ═══ */
+var _origR=R;
+R=function(){_origR();setTimeout(function(){initReveal();initFAQ();initCountUp();initNavScroll()},50)};
+R();
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   RENTGEN SCREENER — Inline Module
+   ═══════════════════════════════════════════════════════════ */
+var RentgenScreener=(function(){
+var API_URL="https://web-production-7fcc3.up.railway.app",container=null;
+var state={filters:{rok:2024,sk_nace:"",mesto:"",trzby_od:"",trzby_do:"",vh_od:"",marza_od:"",zamestnanci_od:"",zamestnanci_do:"",len_ziskove:false,sort:"trzby_celkom",sort_dir:"desc"},results:null,loading:false,error:null,detail:null,detailLoading:false,view:"list",stats:null};
+
+var CSS_INJECTED=false;
+var STYLES='\
+.rg{--rg-bg:transparent;--rg-surface:var(--s1,#0c0d10);--rg-surface2:var(--s2,#111316);--rg-border:rgba(255,255,255,.06);--rg-text:var(--tx,#eeeee9);--rg-text-dim:var(--t2,#94979f);--rg-accent:var(--ac,#c8ff3e);--rg-accent-dim:rgba(200,255,62,.07);--rg-green:#34d399;--rg-red:#f87171;--rg-green-dim:rgba(52,211,153,.12);--rg-red-dim:rgba(248,113,113,.12);--rg-radius:8px;--rg-font:var(--sans,"Bricolage Grotesque",sans-serif);--rg-mono:var(--mono,"Geist Mono",monospace);font-family:var(--rg-font);color:var(--rg-text);padding:2rem 40px;max-width:1100px;margin:0 auto}\
+.rg *,.rg *::before,.rg *::after{box-sizing:border-box}\
+.rg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--rg-border)}\
+.rg-logo{font-size:1.3rem;font-weight:700;letter-spacing:-.03em;color:var(--rg-accent)}\
+.rg-logo span{color:var(--rg-text-dim);font-weight:400;font-size:.8rem;margin-left:.5rem}\
+.rg-stats-bar{display:flex;gap:2rem;font-size:.75rem;color:var(--rg-text-dim);font-family:var(--rg-mono)}\
+.rg-stats-bar strong{color:var(--rg-text)}\
+.rg-filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.7rem;margin-bottom:1.5rem;padding:1.1rem;background:var(--rg-surface);border:1px solid var(--rg-border);border-radius:var(--rg-radius)}\
+.rg-filter-group{display:flex;flex-direction:column;gap:.25rem}\
+.rg-filter-group label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--rg-text-dim);font-weight:500;font-family:var(--rg-mono)}\
+.rg-filter-group input,.rg-filter-group select{background:var(--rg-surface2);border:1px solid var(--rg-border);border-radius:6px;color:var(--rg-text);padding:.45rem .6rem;font-size:.82rem;font-family:var(--rg-font);outline:none;transition:border-color .2s}\
+.rg-filter-group input:focus,.rg-filter-group select:focus{border-color:var(--rg-accent)}\
+.rg-filter-group input::placeholder{color:var(--rg-text-dim);opacity:.4}\
+.rg-filter-actions{display:flex;align-items:end;gap:.5rem}\
+.rg-btn{padding:.45rem 1.1rem;border:none;border-radius:6px;font-family:var(--rg-font);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s}\
+.rg-btn-primary{background:var(--rg-accent);color:var(--bg,#060708)}\
+.rg-btn-primary:hover{filter:brightness(1.15)}\
+.rg-btn-ghost{background:transparent;color:var(--rg-text-dim);border:1px solid var(--rg-border)}\
+.rg-btn-ghost:hover{color:var(--rg-text);border-color:var(--rg-text-dim)}\
+.rg-btn-sm{padding:.3rem .7rem;font-size:.72rem}\
+.rg-checkbox-group{display:flex;align-items:center;gap:.4rem;padding-top:.4rem}\
+.rg-checkbox-group input[type=checkbox]{accent-color:var(--rg-accent)}\
+.rg-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem;font-size:.78rem;color:var(--rg-text-dim)}\
+.rg-table-wrap{overflow-x:auto;border:1px solid var(--rg-border);border-radius:var(--rg-radius)}\
+.rg-table{width:100%;border-collapse:collapse;font-size:.8rem}\
+.rg-table th{background:var(--rg-surface);padding:.6rem .7rem;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--rg-text-dim);border-bottom:1px solid var(--rg-border);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s;font-family:var(--rg-mono)}\
+.rg-table th:hover{color:var(--rg-accent)}\
+.rg-table th.rg-sorted{color:var(--rg-accent)}\
+.rg-table td{padding:.55rem .7rem;border-bottom:1px solid var(--rg-border);white-space:nowrap}\
+.rg-table tr:hover td{background:var(--rg-surface)}\
+.rg-table tr{cursor:pointer;transition:background .1s}\
+.rg-num{font-family:var(--rg-mono);font-size:.78rem;text-align:right}\
+.rg-positive{color:var(--rg-green)}.rg-negative{color:var(--rg-red)}\
+.rg-detail{animation:fadeUp .3s ease both}\
+.rg-detail-header{margin-bottom:2rem}\
+.rg-detail-title{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-top:.8rem}\
+.rg-detail-meta{display:flex;gap:2rem;margin-top:.5rem;font-size:.78rem;color:var(--rg-text-dim);flex-wrap:wrap}\
+.rg-detail-meta span strong{color:var(--rg-text)}\
+.rg-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.8rem;margin-bottom:2rem}\
+.rg-kpi{background:var(--rg-surface);border:1px solid var(--rg-border);border-radius:var(--rg-radius);padding:.9rem 1.1rem}\
+.rg-kpi-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--rg-text-dim);margin-bottom:.25rem;font-family:var(--rg-mono)}\
+.rg-kpi-value{font-family:var(--rg-mono);font-size:1.2rem;font-weight:600}\
+.rg-section-title{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--rg-text-dim);margin:2rem 0 .8rem;padding-bottom:.4rem;border-bottom:1px solid var(--rg-border);font-family:var(--rg-mono)}\
+.rg-loading{display:flex;align-items:center;justify-content:center;padding:3rem;color:var(--rg-text-dim);font-size:.85rem}\
+.rg-spinner{width:16px;height:16px;border:2px solid var(--rg-border);border-top-color:var(--rg-accent);border-radius:50%;animation:rg-spin .6s linear infinite;margin-right:.6rem}\
+.rg-error{padding:.9rem 1.1rem;background:var(--rg-red-dim);border:1px solid rgba(248,113,113,.3);border-radius:var(--rg-radius);color:var(--rg-red);font-size:.82rem;margin:1rem 0}\
+.rg-empty{text-align:center;padding:3rem;color:var(--rg-text-dim)}\
+.rg-pagination{display:flex;justify-content:center;gap:.4rem;margin-top:1.2rem}\
+@keyframes rg-spin{to{transform:rotate(360deg)}}\
+@media(max-width:768px){.rg{padding:1rem 16px}.rg-filters{grid-template-columns:1fr 1fr}.rg-kpi-grid{grid-template-columns:1fr 1fr}.rg-header{flex-direction:column;gap:.8rem}}\
+';
+
+function fmt(v){if(v==null||v==="")return"\u2014";var n=Number(v);if(isNaN(n))return v;return n.toLocaleString("sk-SK",{maximumFractionDigits:0})}
+function fmtPct(v){if(v==null)return"\u2014";return Number(v).toFixed(1)+"%"}
+function fmtEur(v){if(v==null)return"\u2014";var n=Number(v);if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+"M \u20ac";if(Math.abs(n)>=1e3)return(n/1e3).toFixed(0)+"k \u20ac";return fmt(n)+" \u20ac"}
+function valClass(v){if(v==null)return"";return Number(v)>=0?"rg-positive":"rg-negative"}
+function apiFetch(ep,params){var url=new URL(API_URL+ep);Object.entries(params||{}).forEach(function(kv){if(kv[1]!==""&&kv[1]!=null&&kv[1]!==undefined&&kv[1]!==false)url.searchParams.set(kv[0],kv[1])});return fetch(url.toString()).then(function(r){if(!r.ok)throw new Error("API error: "+r.status);return r.json()})}
+
+function render(){if(!container)return;container.innerHTML='<div class="rg">'+renderHeader()+(state.view==="detail"?renderDetail():renderList())+"</div>";bindEvents()}
+
+function renderHeader(){var s=state.stats;return'<div class="rg-header"><div class="rg-logo">RENTGEN <span>investment screener</span></div>'+(s?'<div class="rg-stats-bar"><span>Firiem: <strong>'+fmt(s.firmy)+'</strong></span><span>Z\u00e1znamov: <strong>'+fmt(s.financials)+'</strong></span><span>Roky: <strong>'+(s.roky?s.roky.join(", "):"")+'</strong></span></div>':"")+"</div>"}
+
+function renderList(){return renderFilters()+(state.loading?renderLoading():"")+(state.error?'<div class="rg-error">'+state.error+"</div>":"")+(state.results?renderResults():"")}
+
+function renderFilters(){var f=state.filters;return'<div class="rg-filters"><div class="rg-filter-group"><label>Rok</label><select data-filter="rok"><option value="2024"'+(f.rok==2024?" selected":"")+'>2024</option><option value="2023"'+(f.rok==2023?" selected":"")+'>2023</option><option value="2022"'+(f.rok==2022?" selected":"")+'>2022</option><option value="2021"'+(f.rok==2021?" selected":"")+'>2021</option><option value="2020"'+(f.rok==2020?" selected":"")+'>2020</option></select></div><div class="rg-filter-group"><label>Sektor (SK NACE)</label><input type="text" data-filter="sk_nace" value="'+f.sk_nace+'" placeholder="napr. 69200"></div><div class="rg-filter-group"><label>Mesto</label><input type="text" data-filter="mesto" value="'+f.mesto+'" placeholder="napr. Bratislava"></div><div class="rg-filter-group"><label>Tr\u017eby od (\u20ac)</label><input type="number" data-filter="trzby_od" value="'+f.trzby_od+'" placeholder="0"></div><div class="rg-filter-group"><label>Tr\u017eby do (\u20ac)</label><input type="number" data-filter="trzby_do" value="'+f.trzby_do+'" placeholder="\u221e"></div><div class="rg-filter-group"><label>Zisk od (\u20ac)</label><input type="number" data-filter="vh_od" value="'+f.vh_od+'" placeholder="0"></div><div class="rg-filter-group"><label>Min. mar\u017ea (%)</label><input type="number" data-filter="marza_od" value="'+f.marza_od+'" placeholder="0"></div><div class="rg-filter-group"><label>Zamestnanci od</label><input type="number" data-filter="zamestnanci_od" value="'+f.zamestnanci_od+'" placeholder="0"></div><div class="rg-filter-group rg-checkbox-group"><input type="checkbox" data-filter="len_ziskove"'+(f.len_ziskove?" checked":"")+'><label>Len ziskov\u00e9</label></div><div class="rg-filter-actions"><button class="rg-btn rg-btn-primary" data-action="search">H\u013eada\u0165</button><button class="rg-btn rg-btn-ghost rg-btn-sm" data-action="reset">Reset</button></div></div>'}
+
+function renderResults(){var r=state.results;if(!r||!r.data)return"";if(r.data.length===0)return'<div class="rg-empty">\u017diadne v\u00fdsledky pre zadan\u00e9 filtre.</div>';
+var cols=[{key:"nazov",label:"Firma",sort:"nazov"},{key:"mesto",label:"Mesto"},{key:"trzby_celkom",label:"Tr\u017eby",sort:"trzby_celkom",f:fmtEur,c:"rg-num"},{key:"vh_po_zdaneni",label:"Zisk",sort:"vh_po_zdaneni",f:fmtEur,c:"rg-num",color:1},{key:"marza_pct",label:"Mar\u017ea",sort:"marza",f:fmtPct,c:"rg-num",color:1},{key:"vlastne_imanie",label:"Vl. imanie",sort:"vlastne_imanie",f:fmtEur,c:"rg-num"},{key:"odhad_zamestnancov",label:"Zam.",sort:"osobne_naklady",f:fmt,c:"rg-num"},{key:"zadlzenost_pct",label:"Zadl\u017e.",f:fmtPct,c:"rg-num"}];
+var th="",tb="";
+for(var i=0;i<cols.length;i++){var co=cols[i];th+='<th class="'+(co.sort===state.filters.sort?"rg-sorted":"")+'"'+(co.sort?' data-sort="'+co.sort+'"':"")+">"+co.label+(co.sort===state.filters.sort?(state.filters.sort_dir==="desc"?" \u2193":" \u2191"):"")+"</th>"}
+for(var j=0;j<r.data.length;j++){var row=r.data[j];tb+='<tr data-ico="'+row.ico+'">';for(i=0;i<cols.length;i++){co=cols[i];var val=row[co.key],disp=co.f?co.f(val):(val||"\u2014"),cc=co.color&&val!=null?valClass(val):"";tb+='<td class="'+(co.c||"")+" "+cc+'">'+disp+"</td>"}tb+="</tr>"}
+return'<div class="rg-toolbar"><span>'+r.total+' v\u00fdsledkov</span><button class="rg-btn rg-btn-ghost rg-btn-sm" data-action="export">\u2b07 Export CSV</button></div><div class="rg-table-wrap"><table class="rg-table"><thead><tr>'+th+'</tr></thead><tbody>'+tb+"</tbody></table></div>"+renderPagination()}
+
+function renderPagination(){var r=state.results;if(!r||r.total<=r.limit)return"";var pages=Math.ceil(r.total/r.limit),cur=Math.floor(r.offset/r.limit),h='<div class="rg-pagination">';for(var i=0;i<Math.min(pages,10);i++)h+='<button class="rg-btn '+(i===cur?"rg-btn-primary":"rg-btn-ghost")+' rg-btn-sm" data-page="'+i+'">'+(i+1)+"</button>";return h+"</div>"}
+
+function renderLoading(){return'<div class="rg-loading"><div class="rg-spinner"></div>Na\u010d\u00edtavam...</div>'}
+
+function renderDetail(){if(state.detailLoading)return renderLoading();var d=state.detail;if(!d)return"";var f=d.firma,fin=d.financials,lat=fin.length>0?fin[fin.length-1]:null;
+var kpis=lat?[{l:"Tr\u017eby celkom",v:fmtEur(lat.trzby_celkom)},{l:"Zisk po zdanen\u00ed",v:fmtEur(lat.vh_po_zdaneni),c:valClass(lat.vh_po_zdaneni)},{l:"Ziskov\u00e1 mar\u017ea",v:fmtPct(lat.marza_pct),c:valClass(lat.marza_pct)},{l:"ROE",v:fmtPct(lat.roe_pct)},{l:"Celkov\u00fd majetok",v:fmtEur(lat.celkovy_majetok)},{l:"Vlastn\u00e9 imanie",v:fmtEur(lat.vlastne_imanie),c:valClass(lat.vlastne_imanie)},{l:"Zadl\u017eenos\u0165",v:fmtPct(lat.zadlzenost_pct)},{l:"Current ratio",v:lat.current_ratio!=null?lat.current_ratio.toFixed(2):"\u2014"},{l:"Odhad zamestnancov",v:fmt(lat.odhad_zamestnancov)},{l:"Nerozdelen\u00fd zisk",v:fmtEur(lat.nerozdeleny_zisk)},{l:"Bankov\u00e9 \u00favery",v:fmtEur(lat.bankove_uvery)},{l:"Cash",v:fmtEur(lat.penize_a_ucty)}]:[];
+var kh="";for(var i=0;i<kpis.length;i++)kh+='<div class="rg-kpi"><div class="rg-kpi-label">'+kpis[i].l+'</div><div class="rg-kpi-value '+(kpis[i].c||"")+'">'+kpis[i].v+"</div></div>";
+var metrics=[{k:"trzby_celkom",l:"Tr\u017eby celkom"},{k:"trzby_sluzby",l:"  z toho slu\u017eby"},{k:"trzby_tovary",l:"  z toho tovary"},{k:"pridana_hodnota",l:"Pridan\u00e1 hodnota"},{k:"osobne_naklady",l:"Osobn\u00e9 n\u00e1klady"},{k:"odpisy",l:"Odpisy"},{k:"vh_hospodarsky",l:"VH hospod\u00e1rsky"},{k:"vh_po_zdaneni",l:"VH po zdanen\u00ed"},{k:"celkovy_majetok",l:"Celkov\u00fd majetok"},{k:"vlastne_imanie",l:"Vlastn\u00e9 imanie"},{k:"zavazky_celkom",l:"Z\u00e1v\u00e4zky celkom"},{k:"bankove_uvery",l:"Bankov\u00e9 \u00favery"},{k:"penize_a_ucty",l:"Cash"},{k:"pohladavky_obchodne",l:"Poh\u013ead\u00e1vky obchodn\u00e9"},{k:"zavazky_obchodne",l:"Z\u00e1v\u00e4zky obchodn\u00e9"},{k:"marza_pct",l:"Mar\u017ea (%)",p:1},{k:"roe_pct",l:"ROE (%)",p:1},{k:"zadlzenost_pct",l:"Zadl\u017eenos\u0165 (%)",p:1}];
+var hth="<th>Metrika</th>",htb="";for(i=0;i<fin.length;i++)hth+='<th class="rg-num">'+fin[i].rok+"</th>";
+for(i=0;i<metrics.length;i++){htb+="<tr><td>"+metrics[i].l+"</td>";for(var j=0;j<fin.length;j++){var v=fin[j][metrics[i].k],disp=metrics[i].p?fmtPct(v):fmtEur(v),vc=["vh_po_zdaneni","vh_hospodarsky","vlastne_imanie","marza_pct","roe_pct"].indexOf(metrics[i].k)>=0?valClass(v):"";htb+='<td class="rg-num '+vc+'">'+disp+"</td>"}htb+="</tr>"}
+return'<div class="rg-detail"><div class="rg-detail-header"><button class="rg-btn rg-btn-ghost rg-btn-sm" data-action="back">\u2190 Sp\u00e4\u0165 na zoznam</button><div class="rg-detail-title">'+f.nazov+'</div><div class="rg-detail-meta"><span>I\u010cO: <strong>'+f.ico+'</strong></span><span>DI\u010c: <strong>'+(f.dic||"\u2014")+'</strong></span><span>NACE: <strong>'+f.sk_nace+'</strong></span><span>Zalo\u017een\u00e1: <strong>'+(f.datum_zalozenia||"\u2014")+'</strong></span><span>'+f.mesto+"</span></div></div>"+(lat?'<div class="rg-kpi-grid">'+kh+"</div>":"")+'<div class="rg-section-title">Finan\u010dn\u00e1 hist\u00f3ria</div><div class="rg-table-wrap"><table class="rg-table"><thead><tr>'+hth+"</tr></thead><tbody>"+htb+"</tbody></table></div></div>"}
+
+function bindEvents(){if(!container)return;
+container.querySelectorAll("[data-filter]").forEach(function(el){var k=el.dataset.filter;el.addEventListener("change",function(){state.filters[k]=el.type==="checkbox"?el.checked:el.value});if(el.tagName==="INPUT")el.addEventListener("keydown",function(e){if(e.key==="Enter")doSearch()})});
+container.querySelectorAll('[data-action="search"]').forEach(function(el){el.addEventListener("click",function(){doSearch()})});
+container.querySelectorAll('[data-action="reset"]').forEach(function(el){el.addEventListener("click",function(){state.filters={rok:2024,sk_nace:"",mesto:"",trzby_od:"",trzby_do:"",vh_od:"",marza_od:"",zamestnanci_od:"",zamestnanci_do:"",len_ziskove:false,sort:"trzby_celkom",sort_dir:"desc"};state.results=null;render()})});
+container.querySelectorAll("[data-sort]").forEach(function(el){el.addEventListener("click",function(){var s=el.dataset.sort;if(state.filters.sort===s)state.filters.sort_dir=state.filters.sort_dir==="desc"?"asc":"desc";else{state.filters.sort=s;state.filters.sort_dir="desc"}doSearch()})});
+container.querySelectorAll("[data-ico]").forEach(function(el){el.addEventListener("click",function(){showDetail(el.dataset.ico)})});
+container.querySelectorAll('[data-action="back"]').forEach(function(el){el.addEventListener("click",function(){state.view="list";state.detail=null;render()})});
+container.querySelectorAll('[data-action="export"]').forEach(function(el){el.addEventListener("click",doExport)});
+container.querySelectorAll("[data-page]").forEach(function(el){el.addEventListener("click",function(){doSearch(parseInt(el.dataset.page)*50)})})}
+
+function doSearch(offset){offset=offset||0;state.loading=true;state.error=null;render();var f=state.filters;
+apiFetch("/api/screening",{rok:f.rok,sk_nace:f.sk_nace,mesto:f.mesto,trzby_od:f.trzby_od,trzby_do:f.trzby_do,vh_od:f.vh_od,marza_od:f.marza_od,zamestnanci_od:f.zamestnanci_od,zamestnanci_do:f.zamestnanci_do,len_ziskove:f.len_ziskove,sort:f.sort,sort_dir:f.sort_dir,limit:50,offset:offset}).then(function(d){state.results=d;state.loading=false;render()}).catch(function(e){state.error="Chyba: "+e.message+". Je API server spusten\u00fd?";state.loading=false;render()})}
+
+function showDetail(ico){state.view="detail";state.detailLoading=true;state.detail=null;render();
+apiFetch("/api/firma/"+ico).then(function(d){state.detail=d;state.detailLoading=false;render()}).catch(function(e){state.error="Chyba: "+e.message;state.view="list";state.detailLoading=false;render()})}
+
+function doExport(){var f=state.filters,p=new URLSearchParams;p.set("rok",f.rok);if(f.sk_nace)p.set("sk_nace",f.sk_nace);if(f.trzby_od)p.set("trzby_od",f.trzby_od);if(f.trzby_do)p.set("trzby_do",f.trzby_do);if(f.len_ziskove)p.set("len_ziskove","true");window.open(API_URL+"/api/export?"+p.toString())}
+
+function loadInitialData(){apiFetch("/api/stats").then(function(d){state.stats=d;render()}).catch(function(e){state.error="Ned\u00e1 sa pripoji\u0165 k API.";render()})}
+
+return{
+set API_URL(u){API_URL=u.replace(/\/$/,"")},
+get API_URL(){return API_URL},
+mount:function(sel){container=document.querySelector(sel);if(!container){console.error("RentgenScreener: "+sel+" nen\u00e1jden\u00fd");return}if(!CSS_INJECTED){var st=document.createElement("style");st.id="rg-styles";st.textContent=STYLES;document.head.appendChild(st);CSS_INJECTED=true}loadInitialData()},
+unmount:function(){if(container)container.innerHTML="";container=null}
+}
+})();
+</script>
+</body>
+</html>
