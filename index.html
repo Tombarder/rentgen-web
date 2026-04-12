@@ -598,11 +598,161 @@ var cols=[{key:"nazov",label:"Firma",sort:"nazov"},{key:"mesto",label:"Mesto"},{
 var th="",tb="";
 for(var i=0;i<cols.length;i++){var co=cols[i];th+='<th class="'+(co.sort===state.filters.sort?"rg-sorted":"")+'"'+(co.sort?' data-sort="'+co.sort+'"':"")+">"+co.label+(co.sort===state.filters.sort?(state.filters.sort_dir==="desc"?" \u2193":" \u2191"):"")+"</th>"}
 for(var j=0;j<r.data.length;j++){var row=r.data[j];tb+='<tr data-ico="'+row.ico+'">';for(i=0;i<cols.length;i++){co=cols[i];var val=co.key==="_flags"?null:(row[co.key]!=null?row[co.key]:(co.fb?row[co.fb]:null));var disp=co.raw?(co.f?co.f(val,row):""):(co.f?co.f(val):(val||"\u2014"));var cc=co.color&&val!=null?valClass(val):"";tb+='<td class="'+(co.c||"")+" "+cc+'">'+disp+"</td>"}tb+="</tr>"}
-return'<div class="rg-toolbar"><span>'+r.total+' v\u00fdsledkov</span><button class="rg-btn rg-btn-ghost rg-btn-sm" data-action="export">\u2b07 Export CSV</button></div><div class="rg-table-wrap"><table class="rg-table"><thead><tr>'+th+'</tr></thead><tbody>'+tb+"</tbody></table></div>"+renderPagination()}
+return renderAggCharts(r.data)+'<div class="rg-toolbar"><span>'+r.total+' v\u00fdsledkov</span><button class="rg-btn rg-btn-ghost rg-btn-sm" data-action="export">\u2b07 Export CSV</button></div><div class="rg-table-wrap"><table class="rg-table"><thead><tr>'+th+'</tr></thead><tbody>'+tb+"</tbody></table></div>"+renderPagination()}
+
+function renderAggCharts(data){
+if(!data||data.length<3)return"";
+var W=320,H=160,pad=40,padR=15,padT=20,padB=25;
+var cW=W-pad-padR,cH=H-padT-padB;
+var ac="#c8ff3e",red="#f87171",grn="#34d399",dim="#55585f",surf="#111316";
+
+function mkSVG(title,body){return'<div style="background:'+surf+';border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px 12px;min-width:250px;flex:1"><div style="font-family:var(--rg-mono);font-size:9px;color:'+dim+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'+title+'</div><svg viewBox="0 0 '+W+" "+H+'" width="100%" style="display:block">'+body+"</svg></div>"}
+
+// ─── 1: Revenue distribution histogram ───
+var trzby=[];for(var i=0;i<data.length;i++){var t=data[i].trzby_celkom;if(t!=null&&t>0)trzby.push(t)}
+var c1="";
+if(trzby.length>2){
+trzby.sort(function(a,b){return a-b});
+var mx=trzby[trzby.length-1];
+var buckets,labels;
+if(mx<=500000){buckets=[0,50000,100000,200000,500000];labels=["0-50k","50-100k","100-200k","200-500k"]}
+else if(mx<=5000000){buckets=[0,100000,500000,1000000,2000000,5000000];labels=["0-100k","100-500k","500k-1M","1-2M","2-5M"]}
+else{buckets=[0,500000,1000000,5000000,10000000,100000000];labels=["0-500k","500k-1M","1-5M","5-10M","10M+"]}
+var counts=[];for(i=0;i<labels.length;i++)counts.push(0);
+for(i=0;i<trzby.length;i++){for(var b=buckets.length-2;b>=0;b--){if(trzby[i]>=buckets[b]){if(b>=counts.length)b=counts.length-1;counts[b]++;break}}}
+var maxC=Math.max.apply(null,counts);if(maxC===0)maxC=1;
+var nb=counts.length,bw=Math.max((cW/nb)-6,12);
+for(i=0;i<nb;i++){var barH=counts[i]/maxC*cH;var x=pad+i*(cW/nb)+3;var y=padT+cH-barH;
+c1+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.3"/>';
+if(counts[i]>0)c1+='<text x="'+(x+bw/2)+'" y="'+(y-4)+'" text-anchor="middle" fill="'+ac+'" font-family="monospace" font-size="9" font-weight="600">'+counts[i]+"</text>";
+c1+='<text x="'+(x+bw/2)+'" y="'+(H-3)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="7">'+labels[i]+"</text>"}}
+
+// ─── 2: Profitable vs Loss-making donut ───
+var profit=0,loss=0;
+for(i=0;i<data.length;i++){if(data[i].vh_po_zdaneni!=null){if(data[i].vh_po_zdaneni>0)profit++;else loss++}}
+var total=profit+loss;var c2="";
+if(total>0){
+var cx=W/2,cy=H/2+5,r=45;
+var profAngle=profit/total*360;
+var startRad=-Math.PI/2;
+var endRad=startRad+profAngle*Math.PI/180;
+var largeArc=profAngle>180?1:0;
+if(profit===total){c2+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+grn+'" stroke-width="14" opacity="0.4"/>'}
+else if(loss===total){c2+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+red+'" stroke-width="14" opacity="0.4"/>'}
+else{
+var x1=cx+r*Math.cos(startRad),y1=cy+r*Math.sin(startRad);
+var x2=cx+r*Math.cos(endRad),y2=cy+r*Math.sin(endRad);
+c2+='<path d="M'+x1+" "+y1+"A"+r+" "+r+" 0 "+largeArc+" 1 "+x2+" "+y2+'" fill="none" stroke="'+grn+'" stroke-width="14" opacity="0.4"/>';
+var lossAngle=360-profAngle;var largeArc2=lossAngle>180?1:0;
+var x3=cx+r*Math.cos(endRad),y3=cy+r*Math.sin(endRad);
+c2+='<path d="M'+x3+" "+y3+"A"+r+" "+r+" 0 "+largeArc2+" 1 "+x1+" "+y1+'" fill="none" stroke="'+red+'" stroke-width="14" opacity="0.4"/>'}
+c2+='<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" fill="#eeeee9" font-family="monospace" font-size="18" font-weight="600">'+Math.round(profit/total*100)+'%</text>';
+c2+='<text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">ziskov\u00fdch</text>';
+c2+='<circle cx="'+(pad)+'" cy="'+(H-10)+'" r="4" fill="'+grn+'" opacity="0.4"/><text x="'+(pad+8)+'" y="'+(H-7)+'" fill="'+dim+'" font-family="monospace" font-size="8">Zisk ('+profit+')</text>';
+c2+='<circle cx="'+(W/2)+'" cy="'+(H-10)+'" r="4" fill="'+red+'" opacity="0.4"/><text x="'+(W/2+8)+'" y="'+(H-7)+'" fill="'+dim+'" font-family="monospace" font-size="8">Strata ('+loss+')</text>'}
+
+// ─── 3: Median stats summary ───
+var marze=[],rasty=[],ebitdy=[];
+for(i=0;i<data.length;i++){
+var mc=data[i].marza_cista;if(mc!=null)marze.push(mc);
+var rt=data[i].rast_trzby_yoy;if(rt!=null)rasty.push(rt);
+var eb=data[i].ebitda;if(eb!=null)ebitdy.push(eb)}
+function median(arr){if(!arr.length)return null;arr.sort(function(a,b){return a-b});var mid=Math.floor(arr.length/2);return arr.length%2?arr[mid]:(arr[mid-1]+arr[mid])/2}
+var medMarza=median(marze),medRast=median(rasty),medEbitda=median(ebitdy);
+var c3="";
+var stats=[{l:"Medi\u00e1n mar\u017ea",v:medMarza!=null?medMarza.toFixed(1)+"%":"\u2014",c:medMarza!=null&&medMarza>=0?grn:red},{l:"Medi\u00e1n rast",v:medRast!=null?medRast.toFixed(1)+"%":"\u2014",c:medRast!=null&&medRast>=0?grn:red},{l:"Medi\u00e1n EBITDA",v:medEbitda!=null?(Math.abs(medEbitda)>=1e6?(medEbitda/1e6).toFixed(1)+"M":(medEbitda/1e3).toFixed(0)+"k"):"\u2014",c:medEbitda!=null&&medEbitda>=0?grn:red},{l:"Firiem",v:""+data.length,c:"#eeeee9"}];
+for(i=0;i<stats.length;i++){
+var sy=padT+i*30;
+c3+='<text x="'+pad+'" y="'+(sy+10)+'" fill="'+dim+'" font-family="monospace" font-size="9">'+stats[i].l+'</text>';
+c3+='<text x="'+(W-padR)+'" y="'+(sy+10)+'" text-anchor="end" fill="'+stats[i].c+'" font-family="monospace" font-size="13" font-weight="600">'+stats[i].v+"</text>"}
+
+var html='<div style="display:flex;gap:12px;margin:0 0 20px;flex-wrap:wrap">';
+if(c1)html+=mkSVG("Distrib\u00facia tr\u017eieb",c1);
+if(c2)html+=mkSVG("Ziskov\u00e9 vs Stratov\u00e9",c2);
+html+=mkSVG("S\u00fahrn v\u00fdsledkov",c3);
+html+="</div>";
+return html}
 
 function renderPagination(){var r=state.results;if(!r||r.total<=r.limit)return"";var pages=Math.ceil(r.total/r.limit),cur=Math.floor(r.offset/r.limit),h='<div class="rg-pagination">';for(var i=0;i<Math.min(pages,10);i++)h+='<button class="rg-btn '+(i===cur?"rg-btn-primary":"rg-btn-ghost")+' rg-btn-sm" data-page="'+i+'">'+(i+1)+"</button>";return h+"</div>"}
 
 function renderLoading(){return'<div class="rg-loading"><div class="rg-spinner"></div>Na\u010d\u00edtavam...</div>'}
+
+function renderCharts(fin){
+if(!fin||fin.length<2)return"";
+var W=320,H=180,pad=40,padR=15,padT=25,padB=30;
+var cW=W-pad-padR,cH=H-padT-padB;
+var n=fin.length;
+var ac="#c8ff3e",red="#f87171",grn="#34d399",dim="#55585f",bg="#0c0d10",surf="#111316";
+
+function mkSVG(title,body){return'<div style="background:'+surf+';border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px 12px;min-width:280px;flex:1"><div style="font-family:var(--rg-mono);font-size:9px;color:'+dim+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'+title+'</div><svg viewBox="0 0 '+W+" "+H+'" width="100%" style="display:block">'+body+"</svg></div>"}
+
+function axis(vals,cnt){var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);if(mn===mx){mn=mn>0?0:mn-1;mx=mx<=0?1:mx+1}if(mn>0)mn=0;var step=(mx-mn)/(cnt-1),ticks=[];for(var i=0;i<cnt;i++)ticks.push(mn+step*i);return{min:mn,max:mx,ticks:ticks}}
+
+function yPos(v,a){return padT+cH-(v-a.min)/(a.max-a.min)*cH}
+function xBar(i){return pad+i*(cW/n)+2}
+function bW(){return Math.max((cW/n)-4,8)}
+function fmtAx(v){if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+"M";if(Math.abs(v)>=1e3)return(v/1e3).toFixed(0)+"k";return v.toFixed(0)}
+
+// ─── CHART 1: Revenue & Profit ───
+var trzby=[],zisk=[];
+for(var i=0;i<n;i++){trzby.push(fin[i].trzby_celkom||0);zisk.push(fin[i].vh_po_zdaneni||0)}
+var allVals=trzby.concat(zisk);
+var a1=axis(allVals,4);
+var c1="";
+// Grid lines
+for(i=0;i<a1.ticks.length;i++){var yy=yPos(a1.ticks[i],a1);c1+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>';c1+='<text x="'+(pad-4)+'" y="'+(yy+3)+'" text-anchor="end" fill="'+dim+'" font-family="monospace" font-size="8">'+fmtAx(a1.ticks[i])+"</text>"}
+// Bars (tržby)
+var bw=bW();
+for(i=0;i<n;i++){var y0=yPos(0,a1),yt=yPos(trzby[i],a1);var barH=Math.abs(y0-yt);var barY=Math.min(y0,yt);c1+='<rect x="'+xBar(i)+'" y="'+barY+'" width="'+bw+'" height="'+barH+'" rx="2" fill="'+ac+'" opacity="0.25"/>';c1+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
+// Line (zisk)
+var pts="";for(i=0;i<n;i++){var lx=xBar(i)+bw/2,ly=yPos(zisk[i],a1);pts+=(i===0?"M":"L")+lx+","+ly}
+c1+='<path d="'+pts+'" fill="none" stroke="'+grn+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+for(i=0;i<n;i++){var cx=xBar(i)+bw/2,cy=yPos(zisk[i],a1),col=zisk[i]>=0?grn:red;c1+='<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="'+col+'"/>'}
+// Legend
+c1+='<rect x="'+pad+'" y="4" width="8" height="8" rx="1" fill="'+ac+'" opacity="0.3"/><text x="'+(pad+12)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Tr\u017eby</text>';
+c1+='<line x1="'+(pad+55)+'" y1="8" x2="'+(pad+67)+'" y2="8" stroke="'+grn+'" stroke-width="2"/><text x="'+(pad+71)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Zisk</text>';
+
+// ─── CHART 2: Margin trend ───
+var mCista=[],mEbitda=[];
+for(i=0;i<n;i++){mCista.push(fin[i].marza_cista!=null?fin[i].marza_cista:null);mEbitda.push(fin[i].ebitda_marza!=null?fin[i].ebitda_marza:null)}
+var mAll=[];for(i=0;i<n;i++){if(mCista[i]!=null)mAll.push(mCista[i]);if(mEbitda[i]!=null)mAll.push(mEbitda[i])}
+var c2="";
+if(mAll.length>1){
+var a2=axis(mAll,4);
+for(i=0;i<a2.ticks.length;i++){yy=yPos(a2.ticks[i],a2);c2+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>';c2+='<text x="'+(pad-4)+'" y="'+(yy+3)+'" text-anchor="end" fill="'+dim+'" font-family="monospace" font-size="8">'+a2.ticks[i].toFixed(0)+"%</text>"}
+// Zero line
+if(a2.min<0){var yz=yPos(0,a2);c2+='<line x1="'+pad+'" y1="'+yz+'" x2="'+(W-padR)+'" y2="'+yz+'" stroke="rgba(255,255,255,.12)" stroke-width="0.5" stroke-dasharray="3,3"/>'}
+// EBITDA margin line
+pts="";var started=false;for(i=0;i<n;i++){if(mEbitda[i]!=null){lx=xBar(i)+bw/2;ly=yPos(mEbitda[i],a2);pts+=(started?"L":"M")+lx+","+ly;started=true}}
+if(started)c2+='<path d="'+pts+'" fill="none" stroke="'+ac+'" stroke-width="2" opacity="0.5" stroke-linecap="round"/>';
+// Net margin line
+pts="";started=false;for(i=0;i<n;i++){if(mCista[i]!=null){lx=xBar(i)+bw/2;ly=yPos(mCista[i],a2);pts+=(started?"L":"M")+lx+","+ly;started=true}}
+if(started)c2+='<path d="'+pts+'" fill="none" stroke="'+grn+'" stroke-width="2" stroke-linecap="round"/>';
+for(i=0;i<n;i++){if(mCista[i]!=null)c2+='<circle cx="'+(xBar(i)+bw/2)+'" cy="'+yPos(mCista[i],a2)+'" r="3" fill="'+grn+'"/>';c2+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
+c2+='<line x1="'+pad+'" y1="6" x2="'+(pad+12)+'" y2="6" stroke="'+grn+'" stroke-width="2"/><text x="'+(pad+16)+'" y="9" fill="'+dim+'" font-family="monospace" font-size="8">\u010cist\u00e1</text>';
+c2+='<line x1="'+(pad+55)+'" y1="6" x2="'+(pad+67)+'" y2="6" stroke="'+ac+'" stroke-width="2" opacity="0.5"/><text x="'+(pad+71)+'" y="9" fill="'+dim+'" font-family="monospace" font-size="8">EBITDA</text>'}
+
+// ─── CHART 3: Debt vs Equity ───
+var eq=[],zav=[],uv=[];
+for(i=0;i<n;i++){eq.push(Math.max(fin[i].vlastne_imanie||0,0));zav.push(fin[i].zavazky_celkom||0);uv.push(fin[i].bankove_uvery||0)}
+var maxStack=0;for(i=0;i<n;i++){var s=eq[i]+zav[i];if(s>maxStack)maxStack=s}
+var c3="";
+if(maxStack>0){
+var a3={min:0,max:maxStack,ticks:[0,maxStack/3,maxStack*2/3,maxStack]};
+for(i=0;i<a3.ticks.length;i++){yy=yPos(a3.ticks[i],a3);c3+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>';c3+='<text x="'+(pad-4)+'" y="'+(yy+3)+'" text-anchor="end" fill="'+dim+'" font-family="monospace" font-size="8">'+fmtAx(a3.ticks[i])+"</text>"}
+for(i=0;i<n;i++){var baseY=yPos(0,a3);var eqH=eq[i]/maxStack*cH;var zvH=zav[i]/maxStack*cH;
+c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH-zvH)+'" width="'+bw+'" height="'+zvH+'" rx="2" fill="'+red+'" opacity="0.35"/>';
+c3+='<rect x="'+xBar(i)+'" y="'+(baseY-eqH)+'" width="'+bw+'" height="'+eqH+'" rx="2" fill="'+ac+'" opacity="0.35"/>';
+c3+='<text x="'+(xBar(i)+bw/2)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+dim+'" font-family="monospace" font-size="8">'+fin[i].rok+"</text>"}
+c3+='<rect x="'+pad+'" y="4" width="8" height="8" rx="1" fill="'+ac+'" opacity="0.35"/><text x="'+(pad+12)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Imanie</text>';
+c3+='<rect x="'+(pad+55)+'" y="4" width="8" height="8" rx="1" fill="'+red+'" opacity="0.35"/><text x="'+(pad+67)+'" y="11" fill="'+dim+'" font-family="monospace" font-size="8">Z\u00e1v\u00e4zky</text>'}
+
+var html='<div style="display:flex;gap:12px;margin:24px 0;flex-wrap:wrap">';
+html+=mkSVG("Tr\u017eby & Zisk",c1);
+if(c2)html+=mkSVG("Mar\u017ea (%)",c2);
+if(c3)html+=mkSVG("Imanie vs Z\u00e1v\u00e4zky",c3);
+html+="</div>";
+return html}
 
 function renderDetail(){if(state.detailLoading)return renderLoading();var d=state.detail;if(!d)return"";var f=d.firma,fin=d.financials,lat=fin.length>0?fin[fin.length-1]:null;
 var kpis=lat?[{l:"Tr\u017eby celkom",v:fmtEur(lat.trzby_celkom)},{l:"Zisk po zdanen\u00ed",v:fmtEur(lat.vh_po_zdaneni),c:valClass(lat.vh_po_zdaneni)},{l:"EBITDA",v:fmtEur(lat.ebitda)},{l:"EBITDA mar\u017ea",v:fmtPct(lat.ebitda_marza),c:valClass(lat.ebitda_marza)},{l:"\u010cist\u00e1 mar\u017ea",v:fmtPct(lat.marza_cista),c:valClass(lat.marza_cista)},{l:"ROE",v:fmtPct(lat.roe),c:valClass(lat.roe)},{l:"ROA",v:fmtPct(lat.roa)},{l:"EV/EBITDA",v:lat.ev_ebitda!=null?lat.ev_ebitda.toFixed(1)+"x":"\u2014"},{l:"EV/Tr\u017eby",v:lat.ev_trzby!=null?lat.ev_trzby.toFixed(2)+"x":"\u2014"},{l:"EV odhad",v:fmtEur(lat.ev_odhad)},{l:"Rast tr\u017eieb YoY",v:fmtPct(lat.rast_trzby_yoy),c:valClass(lat.rast_trzby_yoy)},{l:"CAGR 3r",v:fmtPct(lat.cagr_trzby_3r),c:valClass(lat.cagr_trzby_3r)},{l:"Celkov\u00fd majetok",v:fmtEur(lat.celkovy_majetok)},{l:"Vlastn\u00e9 imanie",v:fmtEur(lat.vlastne_imanie),c:valClass(lat.vlastne_imanie)},{l:"Zadl\u017eenos\u0165",v:fmtPct(lat.zadlzenost)},{l:"Current ratio",v:lat.current_ratio!=null?lat.current_ratio.toFixed(2):"\u2014"},{l:"Debt/Equity",v:lat.debt_to_equity!=null?lat.debt_to_equity.toFixed(2):"\u2014"},{l:"Working capital",v:fmtEur(lat.working_capital)},{l:"Cash",v:fmtEur(lat.penize_a_ucty)},{l:"Odhad zamestnancov",v:fmt(lat.odhad_zamestnancov)},{l:"Tr\u017eby/zamestnanec",v:fmtEur(lat.trzby_na_zamestnanca)},{l:"Nerozdelen\u00fd zisk",v:fmtEur(lat.nerozdeleny_zisk)},{l:"Bankov\u00e9 \u00favery",v:fmtEur(lat.bankove_uvery)},{l:"Percentil tr\u017eby",v:lat.percentil_trzby!=null?lat.percentil_trzby.toFixed(0)+"%":"\u2014"},{l:"Percentil mar\u017ea",v:lat.percentil_marza!=null?lat.percentil_marza.toFixed(0)+"%":"\u2014"}]:[];
@@ -610,7 +760,8 @@ var kh="";for(var i=0;i<kpis.length;i++)kh+='<div class="rg-kpi"><div class="rg-
 var metrics=[{k:"trzby_celkom",l:"Tr\u017eby celkom",d:1},{k:"trzby_sluzby",l:"  z toho slu\u017eby",d:1},{k:"trzby_tovary",l:"  z toho tovary",d:1},{k:"pridana_hodnota",l:"Pridan\u00e1 hodnota",d:1},{k:"osobne_naklady",l:"Osobn\u00e9 n\u00e1klady",d:0},{k:"odpisy",l:"Odpisy",d:0},{k:"ebitda",l:"EBITDA",d:1},{k:"vh_hospodarsky",l:"VH hospod\u00e1rsky",d:1},{k:"vh_po_zdaneni",l:"VH po zdanen\u00ed",d:1},{k:"celkovy_majetok",l:"Celkov\u00fd majetok",d:0},{k:"vlastne_imanie",l:"Vlastn\u00e9 imanie",d:1},{k:"nerozdeleny_zisk",l:"Nerozdelen\u00fd zisk",d:1},{k:"zavazky_celkom",l:"Z\u00e1v\u00e4zky celkom",d:-1},{k:"bankove_uvery",l:"Bankov\u00e9 \u00favery",d:-1},{k:"penize_a_ucty",l:"Cash",d:1},{k:"pohladavky_obchodne",l:"Poh\u013ead\u00e1vky obchodn\u00e9",d:0},{k:"zavazky_obchodne",l:"Z\u00e1v\u00e4zky obchodn\u00e9",d:-1},{k:"working_capital",l:"Working capital",d:1},{k:"marza_cista",l:"\u010cist\u00e1 mar\u017ea (%)",p:1,d:1},{k:"ebitda_marza",l:"EBITDA mar\u017ea (%)",p:1,d:1},{k:"roe",l:"ROE (%)",p:1,d:1},{k:"roa",l:"ROA (%)",p:1,d:1},{k:"zadlzenost",l:"Zadl\u017eenos\u0165 (%)",p:1,d:-1},{k:"current_ratio",l:"Current ratio",p:1,d:0},{k:"ev_ebitda",l:"EV/EBITDA",p:1,d:-1},{k:"rast_trzby_yoy",l:"Rast tr\u017eieb YoY (%)",p:1,d:0}];
 var hth="<th>Metrika</th>",htb="";for(i=0;i<fin.length;i++)hth+='<th class="rg-num">'+fin[i].rok+"</th>";
 for(i=0;i<metrics.length;i++){htb+="<tr><td>"+metrics[i].l+"</td>";for(var j=0;j<fin.length;j++){var v=fin[j][metrics[i].k],disp=metrics[i].p?fmtPct(v):fmtEur(v),vc="";if(v!=null&&j>0&&metrics[i].d!==0){var prev=fin[j-1][metrics[i].k];if(prev!=null){var diff=Number(v)-Number(prev);if(diff!==0){if(metrics[i].d===1)vc=diff>0?"rg-positive":"rg-negative";else if(metrics[i].d===-1)vc=diff<0?"rg-positive":"rg-negative"}}}htb+='<td class="rg-num '+vc+'">'+disp+"</td>"}htb+="</tr>"}
-return'<div class="rg-detail"><div class="rg-detail-header"><button class="rg-btn rg-btn-ghost rg-btn-sm" data-action="back">\u2190 Sp\u00e4\u0165 na zoznam</button><div class="rg-detail-title">'+f.nazov+'</div><div class="rg-detail-meta"><span>I\u010cO: <strong>'+f.ico+'</strong></span><span>DI\u010c: <strong>'+(f.dic||"\u2014")+'</strong></span><span>NACE: <strong>'+f.sk_nace+'</strong></span><span>Zalo\u017een\u00e1: <strong>'+(f.datum_zalozenia||"\u2014")+'</strong></span><span>'+f.mesto+"</span></div></div>"+(lat?'<div class="rg-kpi-grid">'+kh+"</div>":"")+'<div class="rg-section-title">Finan\u010dn\u00e1 hist\u00f3ria</div><div class="rg-table-wrap"><table class="rg-table"><thead><tr>'+hth+"</tr></thead><tbody>"+htb+"</tbody></table></div></div>"}
+var charts=renderCharts(fin);
+return'<div class="rg-detail"><div class="rg-detail-header"><button class="rg-btn rg-btn-ghost rg-btn-sm" data-action="back">\u2190 Sp\u00e4\u0165 na zoznam</button><div class="rg-detail-title">'+f.nazov+'</div><div class="rg-detail-meta"><span>I\u010cO: <strong>'+f.ico+'</strong></span><span>DI\u010c: <strong>'+(f.dic||"\u2014")+'</strong></span><span>NACE: <strong>'+f.sk_nace+'</strong></span><span>Zalo\u017een\u00e1: <strong>'+(f.datum_zalozenia||"\u2014")+'</strong></span><span>'+f.mesto+"</span></div></div>"+(lat?'<div class="rg-kpi-grid">'+kh+"</div>":"")+charts+'<div class="rg-section-title">Finan\u010dn\u00e1 hist\u00f3ria</div><div class="rg-table-wrap"><table class="rg-table"><thead><tr>'+hth+"</tr></thead><tbody>"+htb+"</tbody></table></div></div>"}
 
 function bindEvents(){if(!container)return;
 container.querySelectorAll("[data-filter]").forEach(function(el){var k=el.dataset.filter;el.addEventListener("change",function(){state.filters[k]=el.type==="checkbox"?el.checked:el.value});if(el.tagName==="INPUT")el.addEventListener("keydown",function(e){if(e.key==="Enter")doSearch()})});
