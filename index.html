@@ -405,6 +405,7 @@ R();
 
 if(page==="screener"&&typeof RentgenScreener!=="undefined"){
 RentgenScreener.API_URL="https://web-production-7fcc3.up.railway.app";
+setTimeout(function(){
 if(sub){
 RentgenScreener.mount("#screener-mount");
 setTimeout(function(){RentgenScreener._showDetail(sub)},150);
@@ -412,6 +413,7 @@ setTimeout(function(){RentgenScreener._showDetail(sub)},150);
 RentgenScreener.reset();
 RentgenScreener.mount("#screener-mount");
 }
+},0);
 }
 window.scrollTo(0,0);
 }
